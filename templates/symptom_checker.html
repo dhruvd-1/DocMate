@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Symptom Checker - Health Companion{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/symptom_checker.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">Advanced Symptom Checker</h2>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Select all symptoms you are currently experiencing:</p>
+                    
+                    <form action="/predict_disease" method="post" class="needs-validation">
+                        <div class="row">
+                            {% for symptom in symptoms %}
+                            <div class="col-md-6">
+                                <div class="symptom-checkbox mb-3">
+                                    <input class="form-check-input" type="checkbox" name="symptoms" value="{{ symptom }}" id="{{ symptom }}">
+                                    <label class="form-check-label" for="{{ symptom }}">
+                                        {{ symptom }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mt-4 text-center">
+                            <button type="submit" class="btn btn-primary">Analyze Symptoms</button>
+                            <button type="reset" class="btn btn-outline-primary">Clear Selection</button>
+                        </div>
+                    </form>
+                    
+                    <div class="alert alert-info mt-4">
+                        <p class="mb-0"><strong>Note:</strong> This tool is for informational purposes only and does not replace professional medical advice. Always consult with a healthcare provider for proper diagnosis and treatment.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/symptom_checker.js') }}"></script>
+{% endblock %}

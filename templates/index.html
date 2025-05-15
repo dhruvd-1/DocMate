@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Health Companion - Your Digital Health Assistant{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="container my-5">
+    <div class="row align-items-center">
+        <div class="col-lg-6">
+            <h1 class="display-4 text-primary mb-4">Your Personal Health Companion</h1>
+            <p class="lead text-secondary mb-4">
+                Empowering you with advanced health monitoring, personalized insights, 
+                and proactive wellness tracking.
+            </p>
+            <div class="d-flex gap-3">
+                <a href="/note" class="btn btn-outline-primary">
+                    <i data-feather="message-circle" class="me-2"></i> Take Notes 
+                </a>
+                <a href="/symptom_checker" class="btn btn-primary">
+                    <i data-feather="activity" class="me-2"></i> Check Symptoms
+                </a>
+                <a href="/chatbot" class="btn btn-outline-primary">
+                    <i data-feather="message-circle" class="me-2"></i> Chat with AI
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-6 text-center">
+            <img src="{{ url_for('static', filename='images/hero-image.png') }}" alt="Health Monitoring" class="img-fluid shadow-soft rounded-4">
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h2 class="text-primary">Our Key Features</h2>
+            <p class="text-secondary">Comprehensive health tools at your fingertips</p>
+        </div>
+
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i data-feather="edit-3" class="text-primary mb-3" style="width: 50px; height: 50px;"></i>
+                    <h4 class="card-title">Take Notes</h4>
+                    <p class="card-text text-secondary">
+                        AI-powered appointment summarizer and voice recording.
+                    </p>
+                    <a href="/note" class="btn btn-outline-primary mt-3">
+                        Explore
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i data-feather="activity" class="text-primary mb-3" style="width: 50px; height: 50px;"></i>
+                    <h4 class="card-title">Symptom Checker</h4>
+                    <p class="card-text text-secondary">
+                        AI-powered symptom analysis for preliminary health insights.
+                    </p>
+                    <a href="/symptom_checker" class="btn btn-outline-primary mt-3">
+                        Explore
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i data-feather="bar-chart-2" class="text-primary mb-3" style="width: 50px; height: 50px;"></i>
+                    <h4 class="card-title">Lipid Profile</h4>
+                    <p class="card-text text-secondary">
+                        Comprehensive lipid analysis to assess cardiovascular health.
+                    </p>
+                    <a href="/lipid_profile" class="btn btn-outline-primary mt-3">
+                        Analyze
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i data-feather="message-square" class="text-primary mb-3" style="width: 50px; height: 50px;"></i>
+                    <h4 class="card-title">AI Health Assistant</h4>
+                    <p class="card-text text-secondary">
+                        24/7 AI-powered chatbot providing instant health guidance.
+                    </p>
+                    <a href="/chatbot" class="btn btn-outline-primary mt-3">
+                        Chat Now
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Health Tips Section -->
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h2 class="text-primary">Daily Health Tips</h2>
+            <p class="text-secondary">Simple strategies for better well-being</p>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-soft">
+                <div class="card-body">
+                    <h4 class="card-title text-primary mb-3">
+                        <i data-feather="clock" class="me-2"></i> Regular Exercise
+                    </h4>
+                    <p class="card-text text-secondary">
+                        Aim for at least 150 minutes of moderate aerobic activity or 
+                        75 minutes of vigorous activity weekly to maintain optimal health.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-soft">
+                <div class="card-body">
+                    <h4 class="card-title text-primary mb-3">
+                        <i data-feather="sun" class="me-2"></i> Balanced Diet
+                    </h4>
+                    <p class="card-text text-secondary">
+                        Consume a variety of fruits, vegetables, whole grains, 
+                        lean proteins, and healthy fats to nourish your body.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-soft">
+                <div class="card-body">
+                    <h4 class="card-title text-primary mb-3">
+                        <i data-feather="moon" class="me-2"></i> Quality Sleep
+                    </h4>
+                    <p class="card-text text-secondary">
+                        Prioritize 7-9 hours of quality sleep to support physical 
+                        recovery, mental health, and overall well-being.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

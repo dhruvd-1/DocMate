@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}AI Health Assistant - Health Companion{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Main Chatbot Container -->
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-soft">
+                <div class="card-header">
+                    <h2 class="mb-0">
+                        <i data-feather="message-circle" class="me-2 text-primary"></i> 
+                        AI Health Assistant
+                    </h2>
+                </div>
+                
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatContainer">
+                        <div class="message bot-message">
+                            <p class="mb-0">Hello! I'm your AI health assistant. How can I help you today?</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Typing Indicator -->
+                    <div class="typing-indicator" id="typingIndicator" style="display: none;">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+                
+                <!-- Chat Input Area -->
+                <div class="chat-input-area">
+                    <form id="chatForm" class="d-flex align-items-center">
+                        <input type="text" class="form-control me-2" id="userMessage" 
+                               placeholder="Ask a health-related question..." required>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-feather="send"></i>
+                        </button>
+                    </form>
+                    
+                    <!-- Suggestion Chips -->
+                    <div class="suggestion-chips">
+                        <button class="suggestion">Fever</button>
+                        <button class="suggestion">Headache</button>
+                        <button class="suggestion">Diet</button>
+                        <button class="suggestion">Exercise</button>
+                        <button class="suggestion">Sleep</button>
+                        <button class="suggestion">Stress</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Info Card -->
+            <div class="card mt-4 shadow-soft">
+                <div class="card-body">
+                    <h4 class="text-primary mb-3">
+                        <i data-feather="info" class="me-2"></i> About Our AI Health Assistant
+                    </h4>
+                    <p class="text-secondary">
+                        Our AI Health Assistant provides general health information and guidance. 
+                        Remember that this tool is not a substitute for professional medical advice. 
+                        Always consult with a healthcare provider for personalized medical recommendations.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+{% endblock %}

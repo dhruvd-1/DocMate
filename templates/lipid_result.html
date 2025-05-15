@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}Lipid Analysis Result - Health Companion{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lipid_profile.css') }}">
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- html2pdf.js for PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5" id="report-container">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h2 class="mb-0">Lipid Profile Analysis Result</h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert 
+                    {% if risk_level == 'Low Risk' %}
+                        alert-success
+                    {% elif risk_level == 'Moderate Risk' %}
+                        alert-warning
+                    {% else %}
+                        alert-danger
+                    {% endif %}
+                    mb-4">
+                        <h4 class="alert-heading d-flex align-items-center">
+                            {% if risk_level == 'Low Risk' %}
+                                <i data-feather="check-circle" class="me-2"></i>
+                            {% elif risk_level == 'Moderate Risk' %}
+                                <i data-feather="alert-triangle" class="me-2"></i>
+                            {% else %}
+                                <i data-feather="alert-circle" class="me-2"></i>
+                            {% endif %}
+                            Risk Assessment: {{ risk_level }}
+                        </h4>
+                        <p class="mb-0">Based on your lipid profile values, your cardiovascular risk level is classified as {{ risk_level }}.</p>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <!-- Lipid Values Card -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h4 class="mb-0">Your Lipid Values</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span><strong>Total Cholesterol:</strong></span>
+                                        <span>{{ total_cholesterol }} mg/dL</span>
+                                    </div>
+                                    <div class="progress mb-3" style="height: 10px;">
+                                        <div class="progress-bar 
+                                        {% if total_cholesterol < 200 %}
+                                            bg-success
+                                        {% elif total_cholesterol < 240 %}
+                                            bg-warning
+                                        {% else %}
+                                            bg-danger
+                                        {% endif %}" 
+                                        role="progressbar" 
+                                        style="width: {{ (total_cholesterol/300)*100 }}%;" 
+                                        aria-valuenow="{{ total_cholesterol }}" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="300">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span><strong>HDL Cholesterol:</strong></span>
+                                        <span>{{ hdl_cholesterol }} mg/dL</span>
+                                    </div>
+                                    <div class="progress mb-3" style="height: 10px;">
+                                        <div class="progress-bar 
+                                        {% if hdl_cholesterol >= 60 %}
+                                            bg-success
+                                        {% elif hdl_cholesterol >= 40 %}
+                                            bg-info
+                                        {% else %}
+                                            bg-danger
+                                        {% endif %}" 
+                                        role="progressbar" 
+                                        style="width: {{ (hdl_cholesterol/100)*100 }}%;" 
+                                        aria-valuenow="{{ hdl_cholesterol }}" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span><strong>LDL Cholesterol:</strong></span>
+                                        <span>{{ ldl_cholesterol }} mg/dL</span>
+                                    </div>
+                                    <div class="progress mb-3" style="height: 10px;">
+                                        <div class="progress-bar 
+                                        {% if ldl_cholesterol < 100 %}
+                                            bg-success
+                                        {% elif ldl_cholesterol < 130 %}
+                                            bg-info
+                                        {% elif ldl_cholesterol < 160 %}
+                                            bg-warning
+                                        {% else %}
+                                            bg-danger
+                                        {% endif %}" 
+                                        role="progressbar" 
+                                        style="width: {{ (ldl_cholesterol/200)*100 }}%;" 
+                                        aria-valuenow="{{ ldl_cholesterol }}" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="200">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span><strong>Triglycerides:</strong></span>
+                                        <span>{{ triglycerides }} mg/dL</span>
+                                    </div>
+                                    <div class="progress mb-3" style="height: 10px;">
+                                        <div class="progress-bar 
+                                        {% if triglycerides < 150 %}
+                                            bg-success
+                                        {% elif triglycerides < 200 %}
+                                            bg-warning
+                                        {% else %}
+                                            bg-danger
+                                        {% endif %}" 
+                                        role="progressbar" 
+                                        style="width: {{ (triglycerides/500)*100 }}%;" 
+                                        aria-valuenow="{{ triglycerides }}" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="500">
+                                        </div>
+                                    </div>
+                                    
+                                    {% if additional_data is defined and additional_data %}
+                                        <hr>
+                                        <h5 class="mt-3">Additional Metrics:</h5>
+                                        
+                                        {% if additional_data.tc_hdl_ratio is defined %}
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span><strong>TC/HDL Ratio:</strong></span>
+                                                <span>{{ additional_data.tc_hdl_ratio|round(2) }}</span>
+                                            </div>
+                                        {% endif %}
+                                        
+                                        {% if additional_data.non_hdl is defined %}
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span><strong>Non-HDL Cholesterol:</strong></span>
+                                                <span>{{ additional_data.non_hdl|round(1) }} mg/dL</span>
+                                            </div>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Population Comparison Card -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h4 class="mb-0">Population Comparison</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="text-center mb-4">
+                                        <p class="text-muted">Your values compared to the general population</p>
+                                    </div>
+                                    <canvas id="percentileChart" height="250"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h4 class="mb-0">Detailed Analysis</h4>
+                        </div>
+                        <div class="card-body">
+                            {{ result|safe }}
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h4 class="mb-0">Recommendations</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% for recommendation in recommendations %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="d-flex">
+                                            <div class="flex-shrink-0">
+                                                <i data-feather="check" class="text-success me-2"></i>
+                                            </div>
+                                            <div>
+                                                {{ recommendation }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <p class="mb-0"><strong>Note:</strong> These results are based on standard guidelines but should not replace professional medical advice. Please consult with a healthcare provider for proper interpretation of your lipid profile results.</p>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4 no-print">
+                        <a href="/lipid_profile" class="btn btn-outline-primary">
+                            <i data-feather="arrow-left" class="me-1" style="width: 18px; height: 18px;"></i>
+                            Check Another Profile
+                        </a>
+                        <div>
+                            <button onclick="generatePDFReport()" class="btn btn-outline-secondary me-2">
+                                <i data-feather="download" class="me-1" style="width: 18px; height: 18px;"></i> Download PDF
+                            </button>
+                            <a href="/" class="btn btn-primary">
+                                <i data-feather="home" class="me-1" style="width: 18px; height: 18px;"></i>
+                                Return to Home
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/lipid_profile.js') }}"></script>
+<script>
+    // Create the percentile chart
+    document.addEventListener('DOMContentLoaded', function() {
+        const percentileCtx = document.getElementById('percentileChart').getContext('2d');
+        
+        const percentileChart = new Chart(percentileCtx, {
+            type: 'radar',
+            data: {
+                labels: ['Total Cholesterol', 'HDL (Good)', 'LDL (Bad)', 'Triglycerides'],
+                datasets: [{
+                    label: 'Your Percentile Rank',
+                    data: [
+                        {{ percentiles.total_cholesterol }},
+                        {{ percentiles.hdl_cholesterol }},
+                        {{ percentiles.ldl_cholesterol }},
+                        {{ percentiles.triglycerides }}
+                    ],
+                    backgroundColor: 'rgba(67, 97, 238, 0.2)',
+                    borderColor: '#4361ee',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#4361ee',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: true
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100,
+                        ticks: {
+                            stepSize: 20
+                        },
+                        pointLabels: {
+                            font: {
+                                family: "'Inter', sans-serif"
+                            },
+                            color: '#343a40'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.raw + ' percentile';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

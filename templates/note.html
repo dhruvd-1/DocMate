@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Medical Voice Notes - Health Companion{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/notes.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-md-12">
+            <div class="card shadow-card">
+                <div class="card-header">
+                    <h2><i data-feather="mic" class="card-header-icon"></i> Medical Voice Notes</h2>
+                    <p class="text-muted">Record or upload medical appointment notes and get AI-powered summaries</p>
+                </div>
+                <div class="card-body">
+                    <div class="controls">
+                        <button id="start-btn" class="btn btn-primary control-btn">
+                            <i data-feather="mic" class="me-2"></i> Start Recording
+                        </button>
+                        <button id="stop-btn" class="btn btn-danger control-btn">
+                            <i data-feather="square" class="me-2"></i> Stop Recording
+                        </button>
+                        
+                        <!-- Upload audio button and functionality -->
+                        <div class="upload-btn-wrapper">
+                            <button class="btn btn-outline-primary control-btn">
+                                <i data-feather="upload" class="me-2"></i> Upload Recording
+                            </button>
+                            <input type="file" id="audio-upload" accept="audio/*" />
+                        </div>
+                        
+                        <button id="save-btn" class="btn btn-success control-btn">
+                            <i data-feather="save" class="me-2"></i> Save Note
+                        </button>
+                    </div>
+                    
+                    <!-- Audio player (initially hidden) -->
+                    <div id="audio-player-container" class="mb-3" style="display: none;">
+                        <h5>Preview Recording</h5>
+                        <audio id="audio-player" controls></audio>
+                    </div>
+                    
+                    <div id="transcript-container">
+                        <div id="transcript" contenteditable="true" placeholder="Start speaking or type your medical notes here..."></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes display section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="section-header">
+                <h2><i data-feather="file-text" class="section-icon"></i> Saved Notes</h2>
+                <p class="text-muted">Your medical notes with AI-generated summaries</p>
+            </div>
+            <div id="notes-container">
+                <!-- Notes will be loaded here dynamically -->
+                <div class="notes-loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading your notes...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Note details modal -->
+    <div class="modal fade" id="noteDetailsModal" tabindex="-1" aria-labelledby="noteDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="noteDetailsModalLabel">Note Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="original-note-container">
+                                <h5>Original Note</h5>
+                                <div class="original-note-content"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="summary-container">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5>AI-Generated Summary</h5>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary edit-summary-btn">
+                                            <i data-feather="edit-2" class="btn-icon-sm"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-success save-summary-btn" style="display: none;">
+                                            <i data-feather="check" class="btn-icon-sm"></i> Save
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary download-summary-btn">
+                                            <i data-feather="download" class="btn-icon-sm"></i> Download
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="summary-editor" class="summary-content">
+                                    <!-- Summary content will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="{{ url_for('static', filename='js/notes.js') }}"></script>
+{% endblock %}
