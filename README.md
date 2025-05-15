@@ -101,24 +101,43 @@ The app will be available at `http://localhost:5000`.
 ## 📁 Project Structure
 
 ```
-health-assistant-app/
-│
-├── app/
-│   ├── routes/
-│   │   ├── chatbot.py
-│   │   ├── lipid.py
-│   │   ├── notes.py
-│   │   └── symptoms.py
-│   ├── templates/
-│   ├── static/
-│   ├── models.py
-│   ├── forms.py
-│   └── __init__.py
-│
-├── .env
-├── requirements.txt
-├── run.py
-└── README.md
+Directory structure:
+└── dhruvd-1-docmate.git/
+    ├── README.md
+    ├── app.py
+    ├── LICENSE
+    ├── notes.txt
+    ├── requirements.txt
+    ├── models/
+    │   ├── __init__.py
+    │   ├── chatbot_handler.py
+    │   ├── lipid_analyzer.py
+    │   ├── notes_processor.py
+    │   └── symptom_checker.py
+    ├── static/
+    │   ├── css/
+    │   │   ├── chatbot.css
+    │   │   ├── home.css
+    │   │   ├── lipid_profile.css
+    │   │   ├── main.css
+    │   │   ├── notes.css
+    │   │   └── symptom_checker.css
+    │   └── js/
+    │       ├── chatbot.js
+    │       ├── lipid_profile.js
+    │       ├── main.js
+    │       ├── notes.js
+    │       └── symptom_checker.js
+    └── templates/
+        ├── base.html
+        ├── chatbot.html
+        ├── index.html
+        ├── lipid_profile.html
+        ├── lipid_result.html
+        ├── note.html
+        ├── prediction_result.html
+        └── symptom_checker.html
+
 ```
 
 ---
