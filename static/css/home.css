@@ -1,0 +1,61 @@
+/* Home page specific styles */
+
+.display-4 {
+    font-weight: 700;
+    color: #4361ee;
+}
+
+.shadow-soft {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.rounded-4 {
+    border-radius: 1rem;
+}
+
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+    width: 60px;
+    height: 60px;
+    background-color: rgba(67, 97, 238, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem auto;
+}
+
+/* Health Tips cards */
+.card.shadow-soft {
+    transition: all 0.3s ease;
+}
+
+.card.shadow-soft:hover {
+    border-left: 4px solid #4361ee;
+}
+
+.card-title.text-primary {
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+}
+
+/* Hero section */
+@media (max-width: 991.98px) {
+    .hero-section {
+        text-align: center;
+    }
+    
+    .d-flex.gap-3 {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .col-lg-6.text-center {
+        margin-top: 2rem;
+    }
+}

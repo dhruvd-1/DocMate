@@ -1,0 +1,114 @@
+/* Lipid Profile specific styles */
+
+/* Form styling */
+.form-group label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+}
+
+/* Tab navigation */
+.nav-tabs .nav-link {
+    color: #495057;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link.active {
+    color: #4361ee;
+    border-bottom: 2px solid #4361ee;
+    background-color: transparent;
+}
+
+.nav-tabs .nav-link:hover:not(.active) {
+    color: #4361ee;
+    background-color: rgba(67, 97, 238, 0.05);
+}
+
+/* Progress bars */
+.progress {
+    height: 10px;
+    border-radius: 10px;
+    background-color: #e9ecef;
+    overflow: hidden;
+}
+
+.progress-bar {
+    border-radius: 10px;
+    transition: width 1.5s ease;
+}
+
+/* Result page specific styles */
+.alert-heading {
+    display: flex;
+    align-items: center;
+}
+
+.alert-heading i {
+    margin-right: 0.5rem;
+}
+
+/* Reference ranges */
+.reference-ranges strong {
+    color: #4361ee;
+}
+
+/* Recommendations */
+.recommendations-container .recommendation-item {
+    display: flex;
+    margin-bottom: 0.75rem;
+}
+
+.recommendation-item i {
+    color: #28a745;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* PDF download button */
+.btn-download {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Loading overlay for PDF generation */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .container {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .card {
+        border: 1px solid #dee2e6 !important;
+        box-shadow: none !important;
+    }
+    
+    .chart-container {
+        page-break-inside: avoid;
+    }
+}

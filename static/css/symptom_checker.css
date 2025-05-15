@@ -1,0 +1,90 @@
+/* Symptom Checker specific styles */
+
+.symptom-checkbox {
+    padding: 10px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.symptom-checkbox:hover {
+    background-color: rgba(67, 97, 238, 0.05);
+}
+
+.symptom-checkbox input[type="checkbox"] {
+    transform: scale(1.2);
+    margin-right: 10px;
+    accent-color: #4361ee;
+}
+
+.symptom-checkbox label {
+    font-weight: 400;
+    cursor: pointer;
+    user-select: none;
+}
+
+.progress {
+    height: 20px;
+    border-radius: 10px;
+    background-color: #e9ecef;
+    margin-top: 10px;
+}
+
+.progress-bar {
+    background-color: #4361ee;
+    border-radius: 10px;
+    transition: width 1.5s ease;
+}
+
+.list-group-item {
+    border-left: 3px solid #4361ee;
+    margin-bottom: 4px;
+    border-radius: 4px;
+}
+
+/* Quick select buttons */
+.quick-select-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.quick-select-btn {
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.quick-select-btn:hover {
+    background-color: #4361ee;
+    color: white;
+    border-color: #4361ee;
+}
+
+.search-symptoms {
+    margin-bottom: 20px;
+}
+
+/* Prediction result page */
+.confidence-high {
+    color: #28a745;
+}
+
+.confidence-medium {
+    color: #ffc107;
+}
+
+.confidence-low {
+    color: #dc3545;
+}
+
+@media (max-width: 768px) {
+    .col-md-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
