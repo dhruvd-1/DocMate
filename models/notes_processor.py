@@ -29,7 +29,8 @@ def extract_medical_info(text, ai_model=None):
             # Fall back to basic extraction
     
     # Basic extraction using regex patterns
-    return basic_extraction(text)
+    extracted_info = basic_extraction(text)
+    return clean_extracted_info(extracted_info)
 
 def extract_with_ai(text, model):
     """
@@ -61,7 +62,8 @@ def extract_with_ai(text, model):
         Instructions:
         - Extract only if clearly mentioned
         - Be concise but thorough
-        - If no information found for a field, keep it as an empty list or null
+        - IMPORTANT: Return ALL fields in the JSON structure exactly as shown below, even if no information is found
+        - For empty fields, use null for string fields and empty arrays [] for list fields
         - Prioritize medical relevance
         - For allergies, be especially thorough - this is critical patient safety information
 
@@ -382,56 +384,125 @@ def basic_extraction(text):
 
 def clean_extracted_info(extracted_info):
     """
-    Clean and normalize the extracted information
+    Clean and normalize the extracted information to ensure a consistent structure
     
     Args:
         extracted_info (dict): Raw extracted information
         
     Returns:
-        dict: Cleaned information
+        dict: Cleaned information with consistent structure
     """
-    # Ensure all required fields exist
-    required_lists = ["chief_complaints", "past_history", "chronic_diseases", 
-                     "lifestyle", "drug_history", "family_history", "allergies",
-                     "symptoms", "possible_diseases", "chief_complaint_details"]
+    # Initialize with complete template structure regardless of what was found
+    complete_template = {
+        "patient_details": {
+            "name": None,
+            "age": None,
+            "gender": None,
+            "marital_status": None,
+            "residence": None
+        },
+        "chief_complaints": [],
+        "chief_complaint_details": [],
+        "past_history": [],
+        "chronic_diseases": [],
+        "lifestyle": [],
+        "drug_history": [],
+        "family_history": [],
+        "allergies": [],
+        "symptoms": [],
+        "possible_diseases": []
+    }
     
-    required_objects = ["patient_details"]
+    # Start with the template and update with extracted values
+    if not extracted_info:
+        return complete_template
     
-    # Check and initialize required lists
-    for field in required_lists:
-        if field not in extracted_info:
-            extracted_info[field] = []
-        elif not isinstance(extracted_info[field], list):
-            # Convert to list if not already
-            if extracted_info[field] is None:
-                extracted_info[field] = []
-            else:
-                extracted_info[field] = [extracted_info[field]]
+    result = complete_template.copy()
     
-    # Check and initialize required objects
-    for field in required_objects:
-        if field not in extracted_info or not isinstance(extracted_info[field], dict):
-            extracted_info[field] = {}
+    # Update patient details
+    if "patient_details" in extracted_info and isinstance(extracted_info["patient_details"], dict):
+        for field in ["name", "age", "gender", "marital_status", "residence"]:
+            if field in extracted_info["patient_details"] and extracted_info["patient_details"][field]:
+                result["patient_details"][field] = extracted_info["patient_details"][field]
     
-    # Ensure patient_details fields exist
-    patient_detail_fields = ["name", "age", "gender", "marital_status", "residence"]
-    for field in patient_detail_fields:
-        if field not in extracted_info["patient_details"]:
-            extracted_info["patient_details"][field] = None
+    # Update list fields with consistent structure
+    list_fields = [
+        "chief_complaints", "past_history", "chronic_diseases",
+        "drug_history", "family_history", "allergies", 
+        "symptoms", "possible_diseases"
+    ]
     
-    # Remove duplicates in lists while preserving order
-    for field in required_lists:
-        if isinstance(extracted_info[field], list):
-            # Skip fields that are dicts in lists like chief_complaint_details and lifestyle
-            if field in ["chief_complaint_details", "lifestyle"]:
-                continue
-                
+    for field in list_fields:
+        if field in extracted_info and isinstance(extracted_info[field], list):
+            # Remove duplicates while preserving order
             seen = set()
-            extracted_info[field] = [x for x in extracted_info[field] 
-                                    if not (str(x).lower() in seen or seen.add(str(x).lower())) and x]
+            result[field] = [
+                x for x in extracted_info[field] 
+                if x and not (str(x).lower() in seen or seen.add(str(x).lower()))
+            ]
     
-    return extracted_info
+    # Update structured list fields - chief_complaint_details and lifestyle
+    if "chief_complaint_details" in extracted_info and isinstance(extracted_info["chief_complaint_details"], list):
+        # Process each complaint detail object
+        for detail in extracted_info["chief_complaint_details"]:
+            if isinstance(detail, dict) and "complaint" in detail:
+                # Ensure all properties exist
+                formatted_detail = {
+                    "complaint": detail.get("complaint", "Unknown"),
+                    "location": detail.get("location"),
+                    "severity": detail.get("severity"),
+                    "duration": detail.get("duration")
+                }
+                result["chief_complaint_details"].append(formatted_detail)
+    
+    if "lifestyle" in extracted_info and isinstance(extracted_info["lifestyle"], list):
+        # Process each lifestyle object
+        for habit in extracted_info["lifestyle"]:
+            if isinstance(habit, dict) and "habit" in habit:
+                # Ensure all properties exist
+                formatted_habit = {
+                    "habit": habit.get("habit", "Unknown"),
+                    "frequency": habit.get("frequency"),
+                    "duration": habit.get("duration")
+                }
+                result["lifestyle"].append(formatted_habit)
+    
+    return result
 
+def get_edited_summary(note_id):
+    """
+    Retrieve the edited summary for a note
+    
+    Args:
+        note_id: Identifier for the note
+    
+    Returns:
+        dict: The edited summary if found, None otherwise
+    """
+    try:
+        # Convert note_id to index
+        if note_id.startswith('note-'):
+            try:
+                note_index = int(note_id.split('-')[1])
+            except (ValueError, IndexError):
+                return None
+        else:
+            try:
+                note_index = int(note_id)
+            except ValueError:
+                return None
+        
+        # Check if an edited summary file exists for this note
+        summary_file = f'summaries/note_{note_index}.json'
+        if os.path.exists(summary_file):
+            with open(summary_file, 'r') as f:
+                return json.load(f)
+        
+        return None
+    except Exception as e:
+        print(f"Error loading edited summary: {str(e)}")
+        return None
+    
 def get_all_notes():
     """
     Read all notes from the file
@@ -465,34 +536,53 @@ def save_note(note_text):
         print(f"Error saving note: {str(e)}")
         return False
 
-def save_edited_summary(note_id, edited_summary):
+def save_edited_summary(note_id, edited_summary, original_summary=None):
     """
-    Save edited summary to a file
+    Save edited summary by updating the notes cache
     
     Args:
         note_id: Identifier for the note
         edited_summary: The edited summary content
+        original_summary: Original summary content (optional)
     
     Returns:
-        bool: Success status
+        tuple: (success status, message)
     """
     try:
         # Create summaries directory if it doesn't exist
         if not os.path.exists('summaries'):
             os.makedirs('summaries')
-            
-        # Generate filename with timestamp
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        filename = f"summaries/summary_{note_id}_{timestamp}.json"
         
-        # Save the summary
-        with open(filename, 'w') as f:
+        # Extract the index from the note_id
+        note_index = None
+        
+        if isinstance(note_id, str) and note_id.startswith('note-'):
+            try:
+                note_index = int(note_id.split('-')[1])
+            except (ValueError, IndexError):
+                return False, f"Invalid note ID format: {note_id}"
+        else:
+            try:
+                note_index = int(note_id)
+            except (ValueError, TypeError):
+                return False, f"Invalid note ID: {note_id}"
+        
+        # Save the edited summary regardless of note index
+        # This ensures we always save even if we can't validate the index
+        summary_file = f'summaries/note_{note_index}.json'
+        with open(summary_file, 'w') as f:
             json.dump(edited_summary, f, indent=2)
         
-        return True, filename
+        # For debugging, verify the note index exists but don't make it a requirement
+        notes = get_all_notes()
+        if note_index is not None and (note_index < 0 or note_index >= len(notes)):
+            print(f"Warning: Saved summary for note index {note_index}, but this index is out of range (0-{len(notes)-1})")
+        
+        return True, f"Summary saved successfully to {summary_file}"
+        
     except Exception as e:
         print(f"Error saving edited summary: {str(e)}")
-        return False, None
+        return False, str(e)
 
 def transcribe_audio(file_path):
     """
