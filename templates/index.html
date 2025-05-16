@@ -1,158 +1,1803 @@
 {% extends "base.html" %}
 
-{% block title %}Health Companion - Your Digital Health Assistant{% endblock %}
+{% block title %}DocMate - Your Digital Health Assistant{% endblock %}
 
 {% block page_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+<!-- AOS Library for animations -->
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css">
+<style>
+/* Home page specific styles - Redesigned */
+
+/* Basic Resets and Global Styles */
+:root {
+  --primary-color: #4361ee;
+  --primary-light: rgba(67, 97, 238, 0.1);
+  --secondary-color: #6c757d;
+  --text-dark: #343a40;
+  --text-light: #6c757d;
+  --white: #ffffff;
+  --light-bg: #f8f9fa;
+  --border-radius: 12px;
+  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 10px 20px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 15px 30px rgba(0, 0, 0, 0.1);
+  --transition-normal: all 0.3s ease;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+}
+
+/* Hero Section */
+.hero-section {
+  padding: 100px 0 80px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f5f7ff 0%, #edf1ff 100%);
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(67, 97, 238, 0.05) 0%, rgba(67, 97, 238, 0) 70%);
+  z-index: 0;
+}
+
+.hero-title {
+  font-size: 3.2rem;
+  font-weight: 700;
+  color: #343a40;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+  background: linear-gradient(to right, #4361ee, #7b68ee);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  color: #6c757d;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+.btn-demo {
+  background-color: #4361ee;
+  color: #ffffff;
+  padding: 0.8rem 2rem;
+  border-radius: 50px;
+  font-weight: 500;
+  border: none;
+  box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-demo:hover {
+  background-color: #3a56d4;
+  box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
+  transform: translateY(-2px);
+  color: #ffffff;
+}
+
+.btn-video {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: transparent;
+  color: #4361ee;
+  padding: 0.8rem 1.5rem;
+  border-radius: 50px;
+  font-weight: 500;
+  border: 1px solid #4361ee;
+  transition: all 0.3s ease;
+}
+
+.btn-video:hover {
+  background-color: rgba(67, 97, 238, 0.05);
+  color: #4361ee;
+}
+
+.btn-video-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: #4361ee;
+  border-radius: 50%;
+}
+
+.btn-video-icon svg {
+  width: 16px;
+  height: 16px;
+  color: #ffffff;
+}
+
+.hero-image-container {
+  position: relative;
+}
+
+.hero-image {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.main-image {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.recording-badge {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.recording-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #f44336;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7);
+  }
+  
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(244, 67, 54, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
+  }
+}
+
+/* Section Headers */
+.section-header {
+  margin-bottom: 3rem;
+}
+
+.section-header h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #343a40;
+}
+
+.section-header p {
+  font-size: 1.25rem;
+  color: #6c757d;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* Features Section */
+/* Enhanced Features Section */
+.features-section {
+  padding: 100px 0;
+  background-color: #ffffff;
+  position: relative;
+}
+
+.features-top, .features-bottom {
+  margin-top: 40px;
+}
+
+.feature-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 30px 25px;
+  height: 100%;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  z-index: 1;
+}
+
+/* Background Colors for Feature Cards */
+.feature-card.bg-blue {
+  background: linear-gradient(135deg, rgba(67, 97, 238, 0.07) 0%, rgba(67, 97, 238, 0.01) 100%);
+  border-left: 4px solid #4361ee;
+}
+
+.feature-card.bg-purple {
+  background: linear-gradient(135deg, rgba(123, 104, 238, 0.07) 0%, rgba(123, 104, 238, 0.01) 100%);
+  border-left: 4px solid #7b68ee;
+}
+
+.feature-card.bg-green {
+  background: linear-gradient(135deg, rgba(40, 199, 111, 0.07) 0%, rgba(40, 199, 111, 0.01) 100%);
+  border-left: 4px solid #28c76f;
+}
+
+.feature-card.bg-orange {
+  background: linear-gradient(135deg, rgba(255, 159, 67, 0.07) 0%, rgba(255, 159, 67, 0.01) 100%);
+  border-left: 4px solid #ff9f43;
+}
+
+.feature-card.bg-red {
+  background: linear-gradient(135deg, rgba(234, 84, 85, 0.07) 0%, rgba(234, 84, 85, 0.01) 100%);
+  border-left: 4px solid #ea5455;
+}
+
+.feature-card.bg-magenta {
+  background: linear-gradient(135deg, rgba(187, 51, 255, 0.07) 0%, rgba(187, 51, 255, 0.01) 100%);
+  border-left: 4px solid #bb33ff;
+}
+
+/* Hover Effects */
+.feature-card:hover {
+  transform: translateY(-15px);
+  box-shadow: 0 25px 50px rgba(67, 97, 238, 0.2);
+  z-index: 2;
+}
+
+.feature-card.bg-blue:hover {
+  box-shadow: 0 25px 50px rgba(67, 97, 238, 0.2);
+}
+
+.feature-card.bg-purple:hover {
+  box-shadow: 0 25px 50px rgba(123, 104, 238, 0.2);
+}
+
+.feature-card.bg-green:hover {
+  box-shadow: 0 25px 50px rgba(40, 199, 111, 0.2);
+}
+
+.feature-card.bg-orange:hover {
+  box-shadow: 0 25px 50px rgba(255, 159, 67, 0.2);
+}
+
+.feature-card.bg-red:hover {
+  box-shadow: 0 25px 50px rgba(234, 84, 85, 0.2);
+}
+
+.feature-card.bg-magenta:hover {
+  box-shadow: 0 25px 50px rgba(187, 51, 255, 0.2);
+}
+
+/* Feature Icon Styling */
+.feature-icon-wrapper {
+  position: relative;
+  margin-bottom: 25px;
+  display: inline-block;
+}
+
+.feature-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 5px;
+  position: relative;
+  transition: all 0.4s ease;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card.bg-blue .feature-icon {
+  color: #4361ee;
+}
+
+.feature-card.bg-purple .feature-icon {
+  color: #7b68ee;
+}
+
+.feature-card.bg-green .feature-icon {
+  color: #28c76f;
+}
+
+.feature-card.bg-orange .feature-icon {
+  color: #ff9f43;
+}
+
+.feature-card.bg-red .feature-icon {
+  color: #ea5455;
+}
+
+.feature-card.bg-magenta .feature-icon {
+  color: #bb33ff;
+}
+
+.feature-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+/* Icon animation on hover */
+.feature-card:hover .feature-icon {
+  transform: rotate(10deg) scale(1.1);
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Text styling */
+.feature-card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: #343a40;
+  transition: all 0.3s ease;
+}
+
+.feature-card p {
+  font-size: 0.95rem;
+  color: #6c757d;
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+
+.feature-card:hover h3 {
+  transform: translateX(5px);
+}
+
+/* Add floating particle effects */
+.feature-card::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-image: 
+    radial-gradient(circle at 20% 35%, rgba(67, 97, 238, 0.05) 0%, transparent 10%),
+    radial-gradient(circle at 75% 80%, rgba(67, 97, 238, 0.05) 0%, transparent 15%),
+    radial-gradient(circle at 40% 60%, rgba(67, 97, 238, 0.05) 0%, transparent 20%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: -1;
+}
+
+.feature-card:hover::before {
+  opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+  .feature-card {
+    padding: 25px 20px;
+  }
+  
+  .feature-icon {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .feature-icon svg {
+    width: 25px;
+    height: 25px;
+  }
+  
+  .feature-card h3 {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .features-section {
+    padding: 70px 0;
+  }
+  
+  .feature-card {
+    margin-bottom: 20px;
+  }
+} 
+
+/* Process Steps with 3D Animation */
+/* Process Steps with updated arrows and smaller boxes */
+.how-it-works-section {
+  padding: 100px 0;
+  background-color: #f5f7ff;
+  position: relative;
+  overflow: hidden;
+  perspective: 1000px;
+}
+
+.how-it-works-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234361ee' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.5;
+}
+
+.process-container {
+  position: relative;
+  margin: 40px auto;
+  transform-style: preserve-3d;
+}
+
+.process-steps {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: stretch;
+}
+
+.process-step-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.process-step {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 25px 15px; /* Smaller padding */
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transform: translateZ(0);
+  border: 1px solid rgba(67, 97, 238, 0.1);
+  position: relative;
+  height: 100%;
+  max-width: 280px; /* Limit maximum width */
+  margin: 0 auto;
+}
+
+.process-step:hover {
+  transform: translateY(-12px) translateZ(20px);
+  box-shadow: 0 25px 50px rgba(67, 97, 238, 0.2); /* Enhanced shadow on hover */
+  border-color: rgba(67, 97, 238, 0.3);
+}
+
+.step-number {
+  width: 36px; /* Slightly smaller */
+  height: 36px; /* Slightly smaller */
+  background: linear-gradient(135deg, #4361ee, #7b68ee);
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  margin: 0 auto 15px; /* Reduced margin */
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+}
+
+.step-icon {
+  width: 70px; /* Smaller icon */
+  height: 70px; /* Smaller icon */
+  background: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 15px; /* Reduced margin */
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 8px 16px rgba(67, 97, 238, 0.1);
+  border: 1px solid rgba(67, 97, 238, 0.1);
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.process-step:hover .step-icon {
+  transform: rotateY(360deg);
+  box-shadow: 0 12px 25px rgba(67, 97, 238, 0.2); /* Enhanced shadow on hover */
+}
+
+.step-icon svg {
+  width: 28px; /* Smaller icon */
+  height: 28px; /* Smaller icon */
+  color: #4361ee;
+}
+
+.process-step h3 {
+  font-size: 1.2rem; /* Slightly smaller */
+  font-weight: 700;
+  margin-bottom: 10px; /* Reduced margin */
+  color: #343a40;
+}
+
+.process-step p {
+  font-size: 0.9rem; /* Smaller text */
+  color: #6c757d;
+  line-height: 1.5;
+  margin-bottom: 0;
+}
+
+/* New Improved Arrows */
+.process-arrow-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80px;
+  position: absolute;
+  top: 50%;
+  right: -40px;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 80px;
+}
+
+.process-arrow {
+  position: relative;
+  width: 80px;
+  height: 24px;
+}
+
+.process-arrow svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 4px 6px rgba(67, 97, 238, 0.25)); /* Add shadow to arrows */
+}
+
+.process-arrow svg path {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: drawArrow 1.5s forwards;
+}
+
+@keyframes drawArrow {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Pulse animation for the action button */
+.pulse-button {
+  position: relative;
+  background: #4361ee;
+  color: white;
+  border-radius: 50px;
+  padding: 12px 30px;
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+  transition: all 0.3s;
+  overflow: hidden;
+  margin-top: 1rem; /* Reduced margin */
+}
+
+.pulse-button:hover {
+  background: #3a56d4;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(67, 97, 238, 0.4);
+  color: #ffffff;
+}
+
+.pulse-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%) scale(0);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* For mobile responsiveness */
+@media (max-width: 767.98px) {
+  .process-arrow-container {
+    position: static;
+    height: 40px;
+    transform: none;
+    margin: 5px 0;
+  }
+  
+  .process-step {
+    margin-bottom: 10px;
+    padding: 20px 12px; /* Even smaller on mobile */
+  }
+  
+  .how-it-works-section {
+    padding: 50px 0;
+  }
+  
+  .step-icon {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .step-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .process-step h3 {
+    font-size: 1.1rem;
+  }
+  
+  .process-step p {
+    font-size: 0.85rem;
+  }
+}
+
+/* Keep the action button styles from original but update for smaller size */
+.btn-action {
+  background-color: #4361ee;
+  color: #ffffff;
+  padding: 0.7rem 1.8rem; /* Slightly smaller */
+  border-radius: 50px;
+  font-weight: 500;
+  border: none;
+  box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+  transition: all 0.3s ease;
+  margin-top: 1.5rem; /* Reduced margin */
+}
+
+.btn-action:hover {
+  background-color: #3a56d4;
+  box-shadow: 0 8px 25px rgba(67, 97, 238, 0.4); /* Enhanced shadow */
+  transform: translateY(-2px);
+  color: #ffffff;
+}
+
+/* Testimonials Section */
+.testimonials-section {
+  padding: 80px 0;
+  background-color: #ffffff;
+}
+
+.testimonial-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 2rem;
+  height: 100%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.testimonial-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.rating {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.star-filled, .star-empty {
+  width: 20px;
+  height: 20px;
+  color: #ffb400;
+}
+
+.star-empty {
+  color: #e0e0e0;
+}
+
+.testimonial-text {
+  font-size: 1.125rem;
+  font-style: italic;
+  color: #343a40;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.author-avatar {
+  width: 50px;
+  height: 50px;
+  background-color: #e6e9f5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #4361ee;
+  font-size: 1.25rem;
+}
+
+.author-info h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  color: #343a40;
+}
+
+.author-info p {
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin: 0;
+}
+
+/* Health Tips Section */
+.health-tips-section {
+  padding: 80px 0;
+  background-color: #f8f9fa;
+}
+
+.tip-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 2rem;
+  height: 100%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+}
+
+.tip-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  border-left: 3px solid #4361ee;
+}
+
+.tip-icon {
+  width: 60px;
+  height: 60px;
+  background-color: rgba(67, 97, 238, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.tip-icon svg {
+  width: 28px;
+  height: 28px;
+  color: #4361ee;
+}
+
+.tip-card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #343a40;
+}
+
+.tip-card p {
+  font-size: 1rem;
+  color: #6c757d;
+  line-height: 1.6;
+}
+
+/* CTA Section */
+.cta-section {
+  padding: 60px 0 80px;
+  background-color: #ffffff;
+}
+
+.cta-container {
+  background: linear-gradient(135deg, #4361ee 0%, #7b68ee 100%);
+  border-radius: 12px;
+  padding: 4rem 2rem;
+  text-align: center;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='rgba(255,255,255,0.1)' fill-rule='evenodd'/%3E%3C/svg%3E"),
+  linear-gradient(135deg, #4361ee 0%, #7b68ee 100%);
+  opacity: 1;
+  z-index: -1;
+}
+
+.cta-container h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 1rem;
+}
+
+.cta-container p {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 2rem;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.btn-cta {
+  background-color: #ffffff;
+  color: #4361ee;
+  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  font-size: 1.125rem;
+}
+
+.btn-cta:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+  color: #4361ee;
+}
+
+/* Responsive Styles */
+@media (max-width: 991.98px) {
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .hero-content {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  
+  .hero-buttons {
+    justify-content: center;
+  }
+  
+  .process-step::after {
+    display: none;
+  }
+  
+  .process-step {
+    margin-bottom: 2rem;
+  }
+  
+  .cta-container h2 {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .hero-section {
+    padding: 60px 0;
+  }
+  
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.125rem;
+  }
+  
+  .section-header h2 {
+    font-size: 2rem;
+  }
+  
+  .section-header p {
+    font-size: 1.125rem;
+  }
+  
+  .feature-card, .testimonial-card, .tip-card {
+    padding: 1.5rem;
+  }
+  
+  .cta-container {
+    padding: 3rem 1.5rem;
+  }
+  
+  .cta-container h2 {
+    font-size: 1.75rem;
+  }
+  
+  .cta-container p {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .hero-buttons {
+    flex-direction: column;
+  }
+  
+  .btn-demo, .btn-video {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .hero-title {
+    font-size: 1.75rem;
+  }
+  
+  .testimonial-card {
+    margin-bottom: 1.5rem;
+  }
+}
+/* Full-page hero modification */
+.hero-section {
+  padding: 100px 0 80px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f5f7ff 0%, #edf1ff 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+.hero-title {
+  font-size: 4.5rem;
+  font-weight: 700;
+  color: #343a40;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+  background: linear-gradient(to right, #4361ee, #7b68ee);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Straight tablet with notes */
+.hero-image {
+  position: relative;
+  border-radius: 12px;
+  overflow: visible;
+  box-shadow: none;
+}
+
+.doctor-patient-img {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+  object-fit: cover;
+  aspect-ratio: 16/9;
+}
+
+.note-taking-animation {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  margin-bottom: 20px;
+}
+
+.tablet {
+  position: relative;
+  width: 100%;
+  height: 230px;
+  background: linear-gradient(145deg, #2c2c2c, #3a3a3a);
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  transform: none; /* Remove the 3D rotation */
+  border: 5px solid #444;
+  overflow: hidden;
+  animation: subtle-float 4s ease-in-out infinite;
+}
+
+.tablet:before {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 4px;
+  background: #222;
+  border-radius: 2px;
+  top: 8px;
+  left: calc(50% - 15px);
+}
+
+.tablet-screen {
+  position: absolute;
+  width: 96%;
+  height: 90%;
+  background: #f8f9fa;
+  border-radius: 5px;
+  left: 2%;
+  top: 8%;
+  overflow: hidden;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+}
+
+.typing-content {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+  background: #fff;
+  font-family: 'Inter', sans-serif;
+}
+
+.typing-header {
+  background: #f1f3f5;
+  height: 24px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #e4e7eb;
+}
+
+.typing-header-circle {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.typing-header-circle:nth-child(1) {
+  background: #ff5f57;
+}
+
+.typing-header-circle:nth-child(2) {
+  background: #febc2e;
+}
+
+.typing-header-circle:nth-child(3) {
+  background: #28c840;
+}
+
+.typing-header-title {
+  font-size: 12px;
+  color: #6c757d;
+  margin-left: 10px;
+  font-weight: 500;
+}
+
+.typing-body {
+  padding: 15px;
+  height: calc(100% - 30px);
+  overflow: hidden;
+}
+
+.typing-line {
+  margin-bottom: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  display: flex;
+}
+
+.typing-prefix {
+  font-weight: 600;
+  margin-right: 8px;
+  white-space: nowrap;
+  width: 80px;
+}
+
+.typing-text {
+  width: calc(100% - 80px);
+  height: 18px;
+  display: inline-block;
+  color: #343a40;
+  overflow: hidden;
+  position: relative;
+}
+
+.typing-text::after {
+  content: '|';
+  position: relative;
+  display: inline-block;
+  animation: blink 1s infinite;
+  font-weight: 500;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes subtle-float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.recording-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  margin-top: 10px;
+}
+
+.recording-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #ff3b30;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7);
+  }
+  
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(244, 67, 54, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
+  }
+}
+
+/* Responsive adjustments for tablet */
+@media (max-width: 991.98px) {
+  .tablet {
+    height: 210px;
+  }
+  
+  .typing-line {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .note-taking-animation {
+    height: 230px;
+  }
+  
+  .tablet {
+    height: 190px;
+  }
+  
+  .typing-line {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .note-taking-animation {
+    height: 200px;
+  }
+  
+  .tablet {
+    height: 170px;
+  }
+  
+  .typing-prefix {
+    width: 70px;
+  }
+  
+  .typing-text {
+    width: calc(100% - 70px);
+  }
+  
+  .typing-line {
+    font-size: 11px;
+  }
+}
+/* Modern Compact Glassmorphism Navbar - Blue/Purple Theme */
+.navbar {
+  background: linear-gradient(90deg, rgba(67, 97, 238, 0.85), rgba(123, 104, 238, 0.85));
+  backdrop-filter: blur(10px);
+  padding: 0.5rem 1rem; /* Smaller padding for more compact look */
+  box-shadow: 0 4px 20px rgba(67, 97, 238, 0.2);
+  height: auto; /* Keep it compact */
+}
+
+.navbar-brand {
+  color: white !important;
+  font-weight: 600;
+  font-size: 1.1rem; /* Slightly smaller */
+  padding: 0.3rem 0;
+}
+
+.navbar-brand i, .navbar-brand svg {
+  color: white !important;
+}
+
+.nav-link {
+  color: rgba(255, 255, 255, 0.85) !important; /* Slightly transparent white */
+  position: relative;
+  padding: 0.4rem 0.8rem; /* Smaller padding */
+  margin: 0 3px;
+  font-size: 0.9rem; /* Smaller font */
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  color: white !important;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px; /* Thinner line */
+  bottom: 3px; /* Closer to bottom */
+  left: 50%;
+  background: white;
+  transform: translateX(-50%);
+  transition: width 0.3s ease;
+  opacity: 0.7;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 40%; /* Shorter width */
+}
+
+.nav-link.active {
+  color: white !important;
+  font-weight: 600;
+}
+
+/* Make the navbar more compact on mobile */
+@media (max-width: 991.98px) {
+  .navbar-toggler {
+    padding: 0.3rem 0.5rem;
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+  
+  .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.8)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  }
+  
+  .navbar-collapse {
+    background: linear-gradient(90deg, rgba(67, 97, 238, 0.95), rgba(123, 104, 238, 0.95));
+    border-radius: 0 0 10px 10px;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+  }
+}
+/* Modern Compact Glassmorphism Navbar - Blue/Purple Theme */
+.navbar {
+  background: linear-gradient(90deg, rgba(67, 97, 238, 0.85), rgba(123, 104, 238, 0.85));
+  backdrop-filter: blur(10px);
+  padding: 0.5rem 1rem;
+  box-shadow: 0 4px 20px rgba(67, 97, 238, 0.2);
+  height: auto;
+}
+
+.navbar-brand {
+  color: white !important;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 0.3rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.navbar-logo {
+  color: white;
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+}
+
+.navbar-brand:hover .navbar-logo {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
+}
+
+.brand-text {
+  background: linear-gradient(90deg, white, rgba(255, 255, 255, 0.8));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.navbar-brand:hover .brand-text {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.nav-link {
+  color: rgba(255, 255, 255, 0.85) !important;
+  position: relative;
+  padding: 0.4rem 0.8rem;
+  margin: 0 3px;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  color: white !important;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 3px;
+  left: 50%;
+  background: white;
+  transform: translateX(-50%);
+  transition: width 0.3s ease;
+  opacity: 0.7;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 40%;
+}
+
+.nav-link.active {
+  color: white !important;
+  font-weight: 600;
+}
+
+/* Make the navbar more compact on mobile */
+@media (max-width: 991.98px) {
+  .navbar-toggler {
+    padding: 0.3rem 0.5rem;
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+  
+  .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.8)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  }
+  
+  .navbar-collapse {
+    background: linear-gradient(90deg, rgba(67, 97, 238, 0.95), rgba(123, 104, 238, 0.95));
+    border-radius: 0 0 10px 10px;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+  }
+}
+</style>
 {% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
-<div class="container my-5">
-    <div class="row align-items-center">
-        <div class="col-lg-6">
-            <h1 class="display-4 text-primary mb-4">Your Personal Health Companion</h1>
-            <p class="lead text-secondary mb-4">
-                Empowering you with advanced health monitoring, personalized insights, 
-                and proactive wellness tracking.
-            </p>
-            <div class="d-flex gap-3">
-                <a href="/note" class="btn btn-outline-primary">
-                    <i data-feather="message-circle" class="me-2"></i> Take Notes 
-                </a>
-                <a href="/symptom_checker" class="btn btn-primary">
-                    <i data-feather="activity" class="me-2"></i> Check Symptoms
-                </a>
-                <a href="/chatbot" class="btn btn-outline-primary">
-                    <i data-feather="message-circle" class="me-2"></i> Chat with AI
-                </a>
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 hero-content" data-aos="fade-right">
+                <h1 class="hero-title">AI-Powered Medical Conversation Assistant</h1>
+                <p class="hero-subtitle">Health Companion captures and transcribes doctor-patient conversations in real-time, extracts key medical insights, and generates comprehensive summaries.</p>
+                <div class="hero-buttons">
+                    <a href="/note" class="btn btn-demo">Try Demo</a>
+                    <a href="#" class="btn btn-video">
+                        <span class="btn-video-icon">
+                            <i data-feather="play"></i>
+                        </span>
+                        Watch Video
+                    </a>
+                </div>
             </div>
-        </div>
-        <div class="col-lg-6 text-center">
-            <img src="{{ url_for('static', filename='images/hero-image.png') }}" alt="Health Monitoring" class="img-fluid shadow-soft rounded-4">
+            <div class="col-lg-6 hero-image-container" data-aos="fade-left">
+                <div class="hero-image">
+                    <!-- Doctor-patient image -->
+                    <img src="{{ url_for('static', filename='images/doctor-patient.jpg') }}" alt="Doctor-patient conversation" class="main-image doctor-patient-img" onerror="this.src='https://via.placeholder.com/600x400?text=Doctor-Patient+Conversation'">
+                    
+                    <!-- Straight tablet with note taking animation -->
+                    <div class="note-taking-animation">
+                        <div class="tablet">
+                            <div class="tablet-screen">
+                                <div class="typing-content">
+                                    <div class="typing-header">
+                                        <div class="typing-header-circle"></div>
+                                        <div class="typing-header-circle"></div>
+                                        <div class="typing-header-circle"></div>
+                                        <div class="typing-header-title">Patient Notes</div>
+                                    </div>
+                                    <div class="typing-body">
+                                        <div class="typing-line">
+                                            <span class="typing-prefix" style="color: #4361ee;">Patient:</span>
+                                            <span class="typing-text" id="patient-text"></span>
+                                        </div>
+                                        <div class="typing-line">
+                                            <span class="typing-prefix" style="color: #ff3b30;">Symptoms:</span>
+                                            <span class="typing-text" id="symptoms-text"></span>
+                                        </div>
+                                        <div class="typing-line">
+                                            <span class="typing-prefix" style="color: #ffb400;">Diagnosis:</span>
+                                            <span class="typing-text" id="diagnosis-text"></span>
+                                        </div>
+                                        <div class="typing-line">
+                                            <span class="typing-prefix" style="color: #28c840;">Treatment:</span>
+                                            <span class="typing-text" id="treatment-text"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="recording-badge">
+                        <span class="recording-dot"></span>
+                        Recording conversation...
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-
 <!-- Features Section -->
-<div class="container my-5">
-    <div class="row">
-        <div class="col-12 text-center mb-5">
-            <h2 class="text-primary">Our Key Features</h2>
-            <p class="text-secondary">Comprehensive health tools at your fingertips</p>
+<!-- Features Section -->
+<div class="features-section">
+    <div class="container">
+        <div class="section-header text-center" data-aos="fade-up">
+            <h2>Powerful Features</h2>
+            <p>Health Companion streamlines clinical documentation with advanced AI technology</p>
         </div>
 
-        <div class="col-md-3 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i data-feather="edit-3" class="text-primary mb-3" style="width: 50px; height: 50px;"></i>
-                    <h4 class="card-title">Take Notes</h4>
-                    <p class="card-text text-secondary">
-                        AI-powered appointment summarizer and voice recording.
-                    </p>
-                    <a href="/note" class="btn btn-outline-primary mt-3">
-                        Explore
-                    </a>
+        <div class="row features-top">
+            <!-- Feature 1: Real-time Transcription -->
+            <div class="col-md-3 mb-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="feature-card bg-blue">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                <line x1="12" y1="19" x2="12" y2="23"></line>
+                                <line x1="8" y1="23" x2="16" y2="23"></line>
+                            </svg>
+                        </div>
+                    </div>
+                    <h3>Real-time Transcription</h3>
+                    <p>Capture and transcribe doctor-patient conversations as they happen with high accuracy.</p>
+                </div>
+            </div>
+
+            <!-- Feature 2: Medical Insight Extraction -->
+            <div class="col-md-3 mb-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="feature-card bg-purple">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon">
+                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44A2.5 2.5 0 0 1 4.5 17v-2.27a2 2 0 0 1 0-3.46V8.5a2.5 2.5 0 0 1 5 0"></path>
+                              <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44A2.5 2.5 0 0 0 19.5 17v-2.27a2 2 0 0 0 0-3.46V8.5a2.5 2.5 0 0 0-5 0"></path>
+                              <path d="M12 2v20"></path>
+                              <path d="M9 9h6"></path>
+                              <path d="M9 15h6"></path>
+                           </svg>
+                        </div>
+                    </div>
+                    <h3>Medical Insight Extraction</h3>
+                    <p>AI automatically identifies key medical information, symptoms, and diagnoses.</p>
+                </div>
+            </div>
+
+            <!-- Feature 3: Summary Generation -->
+            <div class="col-md-3 mb-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="feature-card bg-green">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <h3>Summary Generation</h3>
+                    <p>Get concise, structured summaries of patient encounters for easy review.</p>
+                </div>
+            </div>
+
+            <!-- Feature 4: Time Savings -->
+            <div class="col-md-3 mb-4" data-aos="fade-up" data-aos-delay="400">
+                <div class="feature-card bg-orange">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <h3>Time Savings</h3>
+                    <p>Reduce documentation time by up to 70%, allowing more focus on patient care.</p>
                 </div>
             </div>
         </div>
+
+        <div class="row features-bottom">
+            <!-- Feature 5: HIPAA Compliant -->
+            <div class="col-md-6 mb-4" data-aos="fade-up" data-aos-delay="500">
+                <div class="feature-card bg-red">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                <circle cx="12" cy="16" r="1"></circle>
+                            </svg>
+                        </div>
+                    </div>
+                    <h3>HIPAA Compliant</h3>
+                    <p>Secure, encrypted, and fully compliant with healthcare privacy regulations.</p>
+                </div>
+            </div>
+
+            <!-- Feature 6: EHR Integration -->
+            <div class="col-md-6 mb-4" data-aos="fade-up" data-aos-delay="600">
+                <div class="feature-card bg-magenta">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <h3>EHR Integration</h3>
+                    <p>Seamlessly integrate with major Electronic Health Record systems.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works Section -->
+<div class="how-it-works-section">
+    <div class="container">
+        <div class="section-header text-center" data-aos="fade-up">
+            <h2>How Health Companion Works</h2>
+            <p>A simple three-step process that transforms doctor-patient conversations into valuable clinical documentation</p>
+        </div>
+
+        <div class="process-container">
+            <div class="row process-steps">
+                <!-- Step 1 -->
+                <div class="col-md-4 process-step-container">
+                    <div class="process-step step-1" data-aos="zoom-in" data-aos-delay="200">
+                        <div class="step-number">1</div>
+                        <div class="step-icon">
+                            <i data-feather="mic"></i>
+                        </div>
+                        <h3>Record Conversation</h3>
+                        <p>Health Companion captures the doctor-patient conversation in real-time with high-quality audio recording.</p>
+                    </div>
+                    <!-- Arrow after step 1 -->
+                    <div class="process-arrow-container">
+                        <div class="process-arrow" data-aos="fade-right" data-aos-delay="400">
+                            <svg width="80" height="24" viewBox="0 0 80 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M0 12H70" stroke="#4361ee" stroke-width="3" stroke-linecap="round"/>
+                                <path d="M60 2L70 12L60 22" stroke="#4361ee" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="col-md-4 process-step-container">
+                    <div class="process-step step-2" data-aos="zoom-in" data-aos-delay="600">
+                        <div class="step-number">2</div>
+                        <div class="step-icon">
+                            <i data-feather="cpu"></i>
+                        </div>
+                        <h3>AI Processing</h3>
+                        <p>Our advanced AI transcribes the conversation and identifies key medical information and insights.</p>
+                    </div>
+                    <!-- Arrow after step 2 -->
+                    <div class="process-arrow-container">
+                        <div class="process-arrow" data-aos="fade-right" data-aos-delay="800">
+                            <svg width="80" height="24" viewBox="0 0 80 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M0 12H70" stroke="#4361ee" stroke-width="3" stroke-linecap="round"/>
+                                <path d="M60 2L70 12L60 22" stroke="#4361ee" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="col-md-4 process-step-container">
+                    <div class="process-step step-3" data-aos="zoom-in" data-aos-delay="1000">
+                        <div class="step-number">3</div>
+                        <div class="step-icon">
+                            <i data-feather="file-text"></i>
+                        </div>
+                        <h3>Summary Generated</h3>
+                        <p>Health Companion creates a structured summary of the encounter, ready for review and EHR integration.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-5">
+            <a href="/note" class="btn btn-action pulse-button" data-aos="zoom-in" data-aos-delay="1400">See Health Companion in Action</a>
+        </div>
+    </div>
+</div>
+
+<!-- Testimonials Section -->
+<div class="testimonials-section">
+    <div class="container">
+        <div class="section-header text-center" data-aos="fade-up">
+            <h2>What Doctors Say</h2>
+            <p>Healthcare professionals are transforming their practice with Health Companion</p>
+        </div>
+
+        <div class="row testimonials-slider" data-aos="fade-up">
+            <div class="col-lg-4 mb-4">
+                <div class="testimonial-card">
+                    <div class="rating">
+                        <i data-feather="star" class="star-filled"></i>
+                        <i data-feather="star" class="star-filled"></i>
+                        <i data-feather="star" class="star-filled"></i>
+                        <i data-feather="star" class="star-filled"></i>
+                        <i data-feather="star" class="star-filled"></i>
+                    </div>
+                    <p class="testimonial-text">"Health Companion has revolutionized our practice. I save at least an hour of documentation time every day."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <span>D</span>
+                        </div>
+                        <div class="author-info">
+                            <h4>Dr. Sarah Johnson</h4>
+                            <p>Family Physician</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mb-4">
+                <div class="testimonial-card">
+                    <div class="rating">
+                        <i data-feather="star" class="star-filled"></i>
+                        <i data-feather="star" class="star-filled"></i>
+                        <i data-feather="star" class="star-filled"></i>
+                        <i data-feather="star" class="star-filled"></i>
+                        <i data-feather="star" class="star-filled"></i>
+                    </div>
+                    <p class="testimonial-text">"The accuracy of the transcription and summaries is remarkable. It's like having a skilled medical scribe."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <span>D</span>
+                        </div>
+                        <div class="author-info">
+                            <h4>Dr. Michael Chen</h4>
+                            <p>Cardiologist</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mb-4">
+                <div class="testimonial-card">
+                    <div class="rating">
+                        <i data-feather="star" class="star-filled"></i>
+                        <i data-feather="star" class="star-filled"></i>
+                        <i data-feather="star" class="star-filled"></i>
+                        <i data-feather="star" class="star-filled"></i>
+                        <i data-feather="star" class="star-empty"></i>
+                    </div>
+                    <p class="testimonial-text">"Our patients love that I can focus on them instead of typing during consultations."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <span>D</span>
+                        </div>
+                        <div class="author-info">
+                            <h4>Dr. Emily Rodriguez</h4>
+                            <p>Pediatrician</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="cta-section">
+    <div class="container">
+        <div class="cta-container" data-aos="fade-up">
+            <h2>Ready to transform your healthcare experience?</h2>
+            <p>Join thousands of healthcare professionals who are already using Health Companion</p>
+            <a href="/symptom_checker" class="btn btn-cta">Get Started Today</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<!-- AOS Library for animations -->
+<script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script>
+    // Initialize AOS animation library
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof AOS !== 'undefined') {
+            AOS.init({
+                duration: 800,
+                offset: 120,
+                easing: 'ease-in-out',
+                once: true
+            });
+        }
         
-        <div class="col-md-3 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i data-feather="activity" class="text-primary mb-3" style="width: 50px; height: 50px;"></i>
-                    <h4 class="card-title">Symptom Checker</h4>
-                    <p class="card-text text-secondary">
-                        AI-powered symptom analysis for preliminary health insights.
-                    </p>
-                    <a href="/symptom_checker" class="btn btn-outline-primary mt-3">
-                        Explore
-                    </a>
-                </div>
-            </div>
-        </div>
+        // Re-initialize Feather icons
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+        
+        // Fix any missing images with placeholders
+        document.querySelectorAll('img').forEach(function(img) {
+            img.addEventListener('error', function() {
+                if (!this.src.includes('placeholder')) {
+                    const alt = this.alt || 'Image';
+                    this.src = `https://via.placeholder.com/600x400?text=${alt.replace(/\s+/g, '+')}`;
+                }
+            });
+        });
 
-        <div class="col-md-3 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i data-feather="bar-chart-2" class="text-primary mb-3" style="width: 50px; height: 50px;"></i>
-                    <h4 class="card-title">Lipid Profile</h4>
-                    <p class="card-text text-secondary">
-                        Comprehensive lipid analysis to assess cardiovascular health.
-                    </p>
-                    <a href="/lipid_profile" class="btn btn-outline-primary mt-3">
-                        Analyze
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i data-feather="message-square" class="text-primary mb-3" style="width: 50px; height: 50px;"></i>
-                    <h4 class="card-title">AI Health Assistant</h4>
-                    <p class="card-text text-secondary">
-                        24/7 AI-powered chatbot providing instant health guidance.
-                    </p>
-                    <a href="/chatbot" class="btn btn-outline-primary mt-3">
-                        Chat Now
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Health Tips Section -->
-<div class="container my-5">
-    <div class="row">
-        <div class="col-12 text-center mb-5">
-            <h2 class="text-primary">Daily Health Tips</h2>
-            <p class="text-secondary">Simple strategies for better well-being</p>
-        </div>
-
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-soft">
-                <div class="card-body">
-                    <h4 class="card-title text-primary mb-3">
-                        <i data-feather="clock" class="me-2"></i> Regular Exercise
-                    </h4>
-                    <p class="card-text text-secondary">
-                        Aim for at least 150 minutes of moderate aerobic activity or 
-                        75 minutes of vigorous activity weekly to maintain optimal health.
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-soft">
-                <div class="card-body">
-                    <h4 class="card-title text-primary mb-3">
-                        <i data-feather="sun" class="me-2"></i> Balanced Diet
-                    </h4>
-                    <p class="card-text text-secondary">
-                        Consume a variety of fruits, vegetables, whole grains, 
-                        lean proteins, and healthy fats to nourish your body.
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-soft">
-                <div class="card-body">
-                    <h4 class="card-title text-primary mb-3">
-                        <i data-feather="moon" class="me-2"></i> Quality Sleep
-                    </h4>
-                    <p class="card-text text-secondary">
-                        Prioritize 7-9 hours of quality sleep to support physical 
-                        recovery, mental health, and overall well-being.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+        // Add custom class to feather star icons
+        document.querySelectorAll('.star-filled').forEach(function(star) {
+            star.style.color = '#ffb400';
+            star.style.fill = '#ffb400';
+        });
+        
+        document.querySelectorAll('.star-empty').forEach(function(star) {
+            star.style.color = '#e0e0e0';
+            star.style.fill = '#e0e0e0';
+        });
+    });
+</script>
 {% endblock %}

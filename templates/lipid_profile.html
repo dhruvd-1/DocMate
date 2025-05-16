@@ -4,6 +4,225 @@
 
 {% block page_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lipid_profile.css') }}">
+<style>
+/* Modern Lipid Profile Analyzer Styles */
+.container {
+  max-width: 1140px;
+  padding: 0 15px;
+}
+
+.shadow-sm {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+}
+
+.card {
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  margin-bottom: 2rem;
+}
+
+.card:hover {
+  box-shadow: 0 15px 40px rgba(67, 97, 238, 0.1) !important;
+  transform: translateY(-5px);
+}
+
+.card-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(67, 97, 238, 0.1);
+}
+
+.bg-primary {
+  background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%) !important;
+}
+
+.text-white {
+  color: white !important;
+}
+
+.card-header h2 {
+  font-weight: 700;
+  margin-bottom: 0;
+  font-size: 1.5rem;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.nav-tabs {
+  border-bottom: 1px solid rgba(67, 97, 238, 0.1);
+  padding-bottom: 5px;
+  display: flex;
+  margin-bottom: 1.5rem !important;
+}
+
+.nav-tabs .nav-item {
+  margin-right: 5px;
+}
+
+.nav-tabs .nav-link {
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  color: #6c757d;
+  border-radius: 10px 10px 0 0;
+  transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link:hover {
+  color: #4361ee;
+  background-color: rgba(67, 97, 238, 0.05);
+}
+
+.nav-tabs .nav-link.active {
+  color: #4361ee;
+  background-color: rgba(67, 97, 238, 0.1);
+  border-bottom: 3px solid #4361ee;
+}
+
+.lead {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  color: #555;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.form-control {
+  border: 1px solid rgba(67, 97, 238, 0.2);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #4361ee;
+  box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+}
+
+.form-text {
+  color: #6c757d;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%);
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 50px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 5px 15px rgba(67, 97, 238, 0.2);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(67, 97, 238, 0.3);
+}
+
+.btn-outline-secondary {
+  border: 1px solid #6c757d;
+  background: transparent;
+  color: #6c757d;
+  padding: 0.7rem 1.5rem;
+  border-radius: 50px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-left: 10px;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+  background-color: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+  transform: translateY(-3px);
+}
+
+.alert {
+  border-radius: 10px;
+  padding: 1rem;
+  margin: 1rem 0;
+  border: none;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alert-dismissible .btn-close {
+  padding: 1.25rem;
+}
+
+.alert-success {
+  background-color: rgba(40, 167, 69, 0.1);
+  border-left: 3px solid #28a745;
+  color: #155724;
+}
+
+.alert-danger {
+  background-color: rgba(220, 53, 69, 0.1);
+  border-left: 3px solid #dc3545;
+  color: #721c24;
+}
+
+.alert-info {
+  background: linear-gradient(135deg, rgba(23, 162, 184, 0.05) 0%, rgba(23, 162, 184, 0.1) 100%);
+  border-left: 3px solid #17a2b8;
+  color: #0c5460;
+}
+
+.row strong {
+  font-weight: 600;
+  color: #343a40;
+}
+
+/* For the reference ranges section */
+.alert-info h5 {
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #0c5460;
+}
+
+.alert-info p {
+  margin-bottom: 1rem;
+}
+
+.alert-info strong {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  color: #0c5460;
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 767.98px) {
+  .btn-outline-secondary {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+  
+  .text-center .btn {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -22,9 +241,12 @@
     
     <div class="row">
         <div class="col-lg-8 mx-auto">
-            <div class="card shadow-sm mb-4">
+            <div class="card shadow-sm mb-4" data-aos="fade-up">
                 <div class="card-header bg-primary text-white">
-                    <h2 class="mb-0">Lipid Profile Analyzer</h2>
+                    <h2 class="mb-0">
+                        <i data-feather="activity" class="me-2"></i>
+                        Lipid Profile Analyzer
+                    </h2>
                 </div>
                 <div class="card-body">
                     <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
@@ -73,8 +295,12 @@
                                 </div>
                                 
                                 <div class="text-center mt-4">
-                                    <button type="submit" class="btn btn-primary">Analyze Profile</button>
-                                    <button type="reset" class="btn btn-outline-secondary">Clear Values</button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i data-feather="bar-chart-2" class="me-2"></i> Analyze Profile
+                                    </button>
+                                    <button type="reset" class="btn btn-outline-secondary">
+                                        <i data-feather="refresh-cw" class="me-2"></i> Clear Values
+                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -93,12 +319,16 @@
                                 </div>
                                 
                                 <div class="text-center mt-4">
-                                    <button type="submit" class="btn btn-primary">Analyze Report</button>
-                                    <button type="reset" class="btn btn-outline-secondary">Clear</button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i data-feather="upload" class="me-2"></i> Analyze Report
+                                    </button>
+                                    <button type="reset" class="btn btn-outline-secondary">
+                                        <i data-feather="trash-2" class="me-2"></i> Clear
+                                    </button>
                                 </div>
                             </form>
                             
-                            <div class="alert alert-info mt-4">
+                            <div class="alert alert-info mt-4" data-aos="fade-up" data-aos-delay="200">
                                 <h5><i data-feather="info" class="me-2"></i> How it works:</h5>
                                 <p>Our system uses advanced text extraction and computer vision to analyze your lab report and identify your lipid values automatically. For best results:</p>
                                 <ul>
@@ -110,7 +340,7 @@
                         </div>
                     </div>
                     
-                    <div class="alert alert-info mt-4">
+                    <div class="alert alert-info mt-4" data-aos="fade-up" data-aos-delay="300">
                         <h5>Reference Ranges:</h5>
                         <div class="row">
                             <div class="col-md-6">

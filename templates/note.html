@@ -4,13 +4,1141 @@
 
 {% block page_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/notes.css') }}">
+<style>
+/* Modern Medical Voice Notes Styles */
+.container {
+  max-width: 1140px;
+  padding: 0 15px;
+}
+
+.shadow-card {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  background: #ffffff;
+  margin-bottom: 2rem;
+}
+
+.shadow-card:hover {
+  box-shadow: 0 15px 40px rgba(67, 97, 238, 0.1);
+  transform: translateY(-5px);
+}
+
+.card-header {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f5f7ff 100%);
+  border-bottom: 1px solid rgba(67, 97, 238, 0.1);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.card-header h2 {
+  font-weight: 700;
+  color: #343a40;
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.card-header-icon {
+  color: #4361ee;
+  margin-right: 10px;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0.7rem 1.2rem;
+  border-radius: 50px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%);
+  border: none;
+  box-shadow: 0 5px 15px rgba(67, 97, 238, 0.2);
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(67, 97, 238, 0.3);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ff3b30 0%, #dc3545 100%);
+  border: none;
+  box-shadow: 0 5px 15px rgba(220, 53, 69, 0.2);
+}
+
+.btn-danger:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #28c76f 0%, #20b363 100%);
+  border: none;
+  box-shadow: 0 5px 15px rgba(40, 199, 111, 0.2);
+}
+
+.btn-success:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(40, 199, 111, 0.3);
+}
+
+.btn-outline-primary {
+  border: 1px solid #4361ee;
+  background: transparent;
+  color: #4361ee;
+}
+
+.btn-outline-primary:hover {
+  background-color: rgba(67, 97, 238, 0.1);
+  color: #4361ee;
+  transform: translateY(-3px);
+}
+
+.upload-btn-wrapper {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.upload-btn-wrapper input[type=file] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+#audio-player-container {
+  background: linear-gradient(135deg, rgba(67, 97, 238, 0.05) 0%, rgba(123, 104, 238, 0.05) 100%);
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin: 1.5rem 0;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#audio-player {
+  width: 100%;
+}
+
+#transcript-container {
+  margin-top: 1.5rem;
+}
+
+#transcript {
+  min-height: 200px;
+  padding: 1.5rem;
+  border: 1px solid rgba(67, 97, 238, 0.2);
+  border-radius: 12px;
+  outline: none;
+  transition: all 0.3s ease;
+  background-color: #f9fafc;
+}
+
+#transcript:focus {
+  border-color: #4361ee;
+  box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+  background-color: #ffffff;
+}
+
+#transcript:empty:before {
+  content: attr(placeholder);
+  color: #6c757d;
+  opacity: 0.7;
+}
+
+/* Saved Notes Section */
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(67, 97, 238, 0.1);
+  padding-bottom: 0.5rem;
+}
+
+.section-header h2 {
+  font-weight: 700;
+  color: #343a40;
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.section-icon {
+  color: #4361ee;
+  margin-right: 10px;
+}
+
+#notes-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 1.5rem;
+}
+
+.note-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  height: 100%;
+  transition: all 0.3s ease;
+  border-top: 5px solid #4361ee;
+  position: relative;
+  overflow: hidden;
+  animation: noteCardFadeIn 0.5s ease;
+  animation-fill-mode: both;
+}
+
+@keyframes noteCardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.note-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(67, 97, 238, 0.1);
+}
+
+.note-card h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #343a40;
+}
+
+.note-date {
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.note-summary {
+  color: #495057;
+  margin-bottom: 1.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.note-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.action-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: rgba(67, 97, 238, 0.1);
+  color: #4361ee;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.action-btn:hover {
+  background-color: #4361ee;
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(67, 97, 238, 0.2);
+}
+
+.btn-icon-sm {
+  width: 16px;
+  height: 16px;
+}
+
+.notes-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 3rem;
+  text-align: center;
+  color: #6c757d;
+  grid-column: 1 / -1;
+}
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Modal Styling */
+.modal-content {
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f5f7ff 100%);
+  border-bottom: 1px solid rgba(67, 97, 238, 0.1);
+  padding: 1.5rem;
+}
+
+.modal-title {
+  font-weight: 700;
+  color: #343a40;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.original-note-container, .summary-container {
+  background-color: #f9fafc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  height: 100%;
+  min-height: 300px;
+}
+
+.original-note-container h5, .summary-container h5 {
+  font-weight: 700;
+  color: #343a40;
+  margin-bottom: 1rem;
+}
+
+.original-note-content, .summary-content {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.original-note-content::-webkit-scrollbar, .summary-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.original-note-content::-webkit-scrollbar-track, .summary-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.original-note-content::-webkit-scrollbar-thumb, .summary-content::-webkit-scrollbar-thumb {
+  background-color: #c1c1c1;
+  border-radius: 10px;
+}
+
+.modal-footer {
+  border-top: 1px solid rgba(67, 97, 238, 0.1);
+  padding: 1.5rem;
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 767.98px) {
+  .controls {
+    flex-direction: column;
+  }
+  
+  .control-btn {
+    width: 100%;
+  }
+  
+  .note-actions {
+    position: static;
+    margin-top: 1rem;
+  }
+  
+  .original-note-container, .summary-container {
+    margin-bottom: 1.5rem;
+  }
+}
+/* Update these styles in your HTML file */
+
+/* Fix the misalignment of text next to headings */
+.card-header {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f5f7ff 100%);
+  border-bottom: 1px solid rgba(67, 97, 238, 0.1);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  /* Added flex-direction to fix alignment */
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.text-muted {
+  color: #6c757d !important;
+  /* Added margin-left to align with the heading text */
+  margin-left: 32px;
+}
+
+/* Section header alignment for Saved Notes */
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(67, 97, 238, 0.1);
+  padding-bottom: 0.5rem;
+  /* Added flex-direction */
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* Enhanced hover effect for note cards */
+.note-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(67, 97, 238, 0.2);
+}
+
+/* Action buttons at the bottom of notes */
+.note-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(67, 97, 238, 0.1);
+}
+
+.action-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: rgba(67, 97, 238, 0.1);
+  color: #4361ee;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.action-btn:hover {
+  background-color: #4361ee;
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(67, 97, 238, 0.2);
+}
+
+.action-btn.edit-btn:hover {
+  background-color: #20b363;
+}
+
+.action-btn.delete-btn:hover {
+  background-color: #dc3545;
+}
+/* 3D Notebook Animation Styles */
+.empty-notes-container {
+  min-height: 350px;
+  animation: fadeIn 0.8s ease;
+}
+
+.empty-notes-animation {
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+  perspective: 1000px;
+}
+
+.notebook {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: floatNotebook 4s ease-in-out infinite;
+}
+
+.notebook-cover {
+  position: absolute;
+  width: 150px;
+  height: 200px;
+  background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%);
+  border-radius: 5px 15px 15px 5px;
+  box-shadow: 0 10px 25px rgba(67, 97, 238, 0.3);
+  transform: translateZ(10px);
+  backface-visibility: hidden;
+  left: calc(50% - 75px);
+  top: 0;
+  transform-origin: left center;
+  transition: transform 0.5s ease;
+}
+
+.notebook-page {
+  position: absolute;
+  width: 140px;
+  height: 190px;
+  background-color: white;
+  border-radius: 3px;
+  left: calc(50% - 70px);
+  top: 5px;
+  transform: translateZ(5px);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  
+  /* Add lines to simulate paper */
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 25px,
+    #e6e6e6 25px,
+    #e6e6e6 26px
+  );
+  background-position: 0 20px;
+}
+
+.notebook-cover:after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 200px;
+  background: linear-gradient(135deg, #2a3ed1 0%, #1f2f98 100%);
+  left: -10px;
+  border-radius: 10px 0 0 10px;
+}
+
+/* Floating animation */
+@keyframes floatNotebook {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-10px) rotate(2deg);
+  }
+  50% {
+    transform: translateY(5px) rotate(-1deg);
+  }
+  75% {
+    transform: translateY(-7px) rotate(1deg);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Start recording button pulsing effect */
+.pulse-btn {
+  box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.7);
+  animation: pulse 2s infinite cubic-bezier(0.66, 0, 0, 1);
+}
+
+@keyframes pulse {
+  to {
+    box-shadow: 0 0 0 15px rgba(67, 97, 238, 0);
+  }
+}
+
+/* Highlight animation for the recording button */
+.highlight-btn {
+  animation: highlightPulse 1.5s ease;
+}
+
+@keyframes highlightPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.7); }
+  20% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(67, 97, 238, 0.4); }
+  70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(67, 97, 238, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(67, 97, 238, 0); }
+}
+/* Simple and elegant empty state styling */
+.empty-state-container {
+  width: 100%;
+  text-align: center;
+  padding: 3rem 1rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  margin: 2rem 0;
+}
+
+.empty-state-container h3 {
+  color: #4361ee;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-container p {
+  color: #6c757d;
+  margin-bottom: 0;
+}
+
+/* Simple 3D notebook animation */
+.notebook-animation {
+  width: 140px;
+  height: 170px;
+  margin: 0 auto 1rem;
+  position: relative;
+  perspective: 1500px;
+}
+
+.notebook {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: float 3s ease-in-out infinite;
+}
+
+.cover {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(145deg, #4361ee, #3a56d4);
+  border-radius: 3px 12px 12px 3px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+  transform-origin: left;
+  z-index: 2;
+}
+
+.page {
+  position: absolute;
+  width: 95%;
+  height: 95%;
+  background-color: white;
+  border-radius: 2px;
+  top: 2.5%;
+  left: 2.5%;
+  z-index: 1;
+  
+  /* Add subtle lines to simulate paper */
+  background-image: repeating-linear-gradient(
+    white,
+    white 15px,
+    #f0f0f0 15px,
+    #f0f0f0 16px
+  );
+  background-position: 0 10px;
+}
+
+/* Notebook spine */
+.cover:before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 100%;
+  background: linear-gradient(145deg, #2a3ed1, #1f2f98);
+  left: -10px;
+  top: 0;
+  border-radius: 10px 0 0 10px;
+  box-shadow: inset -2px 0 5px rgba(0, 0, 0, 0.1);
+}
+/* Add this CSS to your note.html or notes.css file */
+
+/* Highlight animation for updated note cards */
+@keyframes highlightUpdate {
+    0% { 
+        box-shadow: 0 5px 15px rgba(67, 97, 238, 0.1);
+        border-top-color: #4361ee;
+    }
+    30% { 
+        box-shadow: 0 0 0 6px rgba(67, 97, 238, 0.5);
+        border-top-color: #28c76f;
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(67, 97, 238, 0.1); 
+        border-top-color: #28c76f;
+    }
+    100% { 
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        border-top-color: #4361ee;
+    }
+}
+
+.highlight-update {
+    animation: highlightUpdate 2s ease;
+}
+
+/* Improve editing experience in the summary editor */
+#summary-editor[contenteditable="true"] {
+    background-color: #fff;
+    border: 1px solid #4361ee;
+    box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+    padding: 1rem;
+}
+
+#summary-editor[contenteditable="true"] h3 {
+    margin-top: 1.5rem;
+    color: #4361ee;
+    border-bottom: 1px solid rgba(67, 97, 238, 0.2);
+    padding-bottom: 0.5rem;
+}
+
+#summary-editor[contenteditable="true"] ul {
+    margin-bottom: 1rem;
+}
+
+/* Style for the edited content indicator */
+.edited-indicator {
+    display: inline-block;
+    margin-left: 10px;
+    font-size: 0.75rem;
+    color: #28c76f;
+    background-color: rgba(40, 199, 111, 0.1);
+    padding: 0.2rem 0.5rem;
+    border-radius: 50px;
+}
+/* Modern Medical Note Card Styling */
+.note-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 0;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  border-left: 4px solid #4361ee;
+  height: 100%;
+  animation: cardFadeIn 0.6s ease-out;
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.note-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(67, 97, 238, 0.15);
+}
+
+/* Card Header */
+.note-header {
+  background: linear-gradient(120deg, #f8faff 0%, #f1f5ff 100%);
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(67, 97, 238, 0.1);
+}
+
+.note-date {
+  font-size: 0.8rem;
+  color: #8a94a6;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.02em;
+}
+
+.note-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0;
+  transition: color 0.3s ease;
+}
+
+.note-card:hover .note-title {
+  color: #4361ee;
+}
+
+/* Patient Info Tags */
+.patient-info {
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  background-color: #f9faff;
+  border-bottom: 1px solid rgba(67, 97, 238, 0.08);
+}
+
+.info-tag {
+  padding: 0.4rem 0.8rem;
+  border-radius: 100px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: all 0.3s ease;
+}
+
+.info-tag:before {
+  content: '';
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+  opacity: 0.7;
+}
+
+.info-tag.age {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.info-tag.gender {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.info-tag.marital-status {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.info-tag.residence {
+  background-color: #e0f2f1;
+  color: #00796b;
+}
+
+/* Content Sections */
+.note-content {
+  padding: 1.5rem;
+}
+
+.content-section {
+  margin-bottom: 1.8rem;
+  animation: sectionFadeIn 0.5s ease;
+}
+
+@keyframes sectionFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.content-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #4361ee;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed rgba(67, 97, 238, 0.2);
+}
+
+.content-title svg {
+  stroke-width: 2.5;
+}
+
+.content-body {
+  padding-left: 0.5rem;
+}
+
+/* Tags Styling */
+.tags-container {
+  margin-top: 0.5rem;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  padding: 0.5rem 1rem;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.tag.complaint {
+  background-color: #ede7f6;
+  color: #5e35b1;
+}
+
+.tag.complaint:hover {
+  background-color: #d1c4e9;
+  transform: translateY(-2px);
+}
+
+.tag.symptom {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.tag.symptom:hover {
+  background-color: #ffcdd2;
+  transform: translateY(-2px);
+}
+
+.tag.disease {
+  background-color: #fce4ec;
+  color: #c2185b;
+}
+
+.tag.disease:hover {
+  background-color: #f8bbd0;
+  transform: translateY(-2px);
+}
+
+/* Allergy Alert Section */
+.alert-section {
+  margin: 1.2rem 0;
+  padding: 1rem 1.2rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  animation: alertPulse 2s infinite;
+}
+
+@keyframes alertPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(220, 53, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+  }
+}
+
+.alert-allergy {
+  background-color: #fff5f5;
+  border-left: 4px solid #e53e3e;
+  color: #c53030;
+  font-weight: 500;
+}
+
+.alert-allergy svg {
+  color: #e53e3e;
+  stroke-width: 2.5;
+}
+
+/* Card Actions */
+.note-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  padding: 1.2rem 1.5rem;
+  border-top: 1px solid rgba(67, 97, 238, 0.08);
+  background-color: #fafbff;
+}
+
+.action-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background-color: #f1f5ff;
+  color: #4361ee;
+}
+
+.action-btn svg {
+  stroke-width: 2.2;
+  transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+  transform: translateY(-5px) scale(1.05);
+}
+
+.action-btn.view-btn:hover {
+  background-color: #4361ee;
+  color: white;
+}
+
+.action-btn.edit-btn:hover {
+  background-color: #28c76f;
+  color: white;
+}
+
+.action-btn.delete-btn:hover {
+  background-color: #ea5455;
+  color: white;
+}
+
+/* Empty State Animation */
+.empty-state-container {
+  padding: 4rem 2rem;
+  text-align: center;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+}
+
+.notebook-animation {
+  width: 160px;
+  height: 200px;
+  margin: 0 auto 2rem;
+  perspective: 1500px;
+}
+
+.notebook {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: float 5s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotateX(4deg);
+  }
+  50% {
+    transform: translateY(-15px) rotateX(10deg);
+  }
+}
+
+.cover {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #6e8efb, #4361ee);
+  border-radius: 5px 15px 15px 5px;
+  box-shadow: 0 10px 30px rgba(67, 97, 238, 0.2);
+  transform-origin: left;
+  transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+  z-index: 2;
+}
+
+.page {
+  position: absolute;
+  width: 95%;
+  height: 95%;
+  background-color: white;
+  border-radius: 3px;
+  top: 2.5%;
+  left: 2.5%;
+  z-index: 1;
+  background-image: repeating-linear-gradient(
+    white, white 20px,
+    #f0f0f0 20px, #f0f0f0 21px
+  );
+  background-position: 0 10px;
+}
+
+.notebook:hover .cover {
+  transform: rotateY(-60deg);
+}
+
+/* Chronic Conditions Section */
+.condition-timeline {
+  margin-top: 1rem;
+  padding-left: 1rem;
+  border-left: 2px dashed rgba(67, 97, 238, 0.2);
+}
+
+.condition-item {
+  position: relative;
+  padding: 0.5rem 0 0.5rem 1.5rem;
+}
+
+.condition-item:before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 10px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #4361ee;
+}
+
+/* Possible Conditions */
+.possible-container {
+  background-color: #fffaf0;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 0.5rem;
+}
+
+/* Additional animations */
+@keyframes pulseAction {
+  0% {
+    box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(67, 97, 238, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(67, 97, 238, 0);
+  }
+}
+
+/* Apply this to newly created notes */
+.note-card.new-note {
+  animation: newNoteHighlight 2s ease;
+}
+
+@keyframes newNoteHighlight {
+  0% {
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.5);
+  }
+  100% {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  }
+}
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+
+}
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-lg-10 col-md-12">
-            <div class="card shadow-card">
+            <div class="shadow-card" data-aos="fade-up">
                 <div class="card-header">
                     <h2><i data-feather="mic" class="card-header-icon"></i> Medical Voice Notes</h2>
                     <p class="text-muted">Record or upload medical appointment notes and get AI-powered summaries</p>
@@ -54,11 +1182,11 @@
     <!-- Notes display section -->
     <div class="row mt-5">
         <div class="col-12">
-            <div class="section-header">
+            <div class="section-header" data-aos="fade-up">
                 <h2><i data-feather="file-text" class="section-icon"></i> Saved Notes</h2>
                 <p class="text-muted">Your medical notes with AI-generated summaries</p>
             </div>
-            <div id="notes-container">
+            <div id="notes-container" data-aos="fade-up" data-aos-delay="200">
                 <!-- Notes will be loaded here dynamically -->
                 <div class="notes-loading">
                     <div class="spinner-border text-primary" role="status">
@@ -120,5 +1248,6 @@
 
 {% block page_scripts %}
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="{{ url_for('static', filename='js/notes.js') }}"></script>
 {% endblock %}

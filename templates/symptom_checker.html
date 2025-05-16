@@ -4,15 +4,187 @@
 
 {% block page_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/symptom_checker.css') }}">
+<style>
+/* Modern Symptom Checker Styles */
+.container {
+  max-width: 1140px;
+  padding: 0 15px;
+}
+
+.card {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  margin-bottom: 2rem;
+}
+
+.card:hover {
+  box-shadow: 0 15px 40px rgba(67, 97, 238, 0.1);
+  transform: translateY(-5px);
+}
+
+.card-header {
+  background: linear-gradient(135deg, #f8f9ff 0%, #f5f7ff 100%);
+  border-bottom: 1px solid rgba(67, 97, 238, 0.1);
+  padding: 1.5rem;
+}
+
+.card-header h2 {
+  font-weight: 700;
+  color: #343a40;
+  margin-bottom: 0;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.lead {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  color: #555;
+}
+
+.symptom-checkbox {
+  position: relative;
+  padding: 12px 15px;
+  background: linear-gradient(135deg, rgba(67, 97, 238, 0.02) 0%, rgba(123, 104, 238, 0.02) 100%);
+  border-radius: 10px;
+  margin-bottom: 10px !important;
+  transition: all 0.3s ease;
+  animation: fadeIn 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.symptom-checkbox:hover {
+  background: linear-gradient(135deg, rgba(67, 97, 238, 0.05) 0%, rgba(123, 104, 238, 0.05) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.03);
+}
+
+.form-check-input {
+  width: 1.2em;
+  height: 1.2em;
+  margin-top: 0.15em;
+  border: 1px solid rgba(67, 97, 238, 0.3);
+}
+
+.form-check-input:checked {
+  background-color: #4361ee;
+  border-color: #4361ee;
+}
+
+.form-check-label {
+  margin-left: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: #495057;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%);
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 50px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 5px 15px rgba(67, 97, 238, 0.2);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(67, 97, 238, 0.3);
+}
+
+.btn-outline-primary {
+  border: 1px solid #4361ee;
+  background: transparent;
+  color: #4361ee;
+  padding: 0.7rem 1.5rem;
+  border-radius: 50px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-left: 10px;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+  background-color: rgba(67, 97, 238, 0.1);
+  color: #4361ee;
+  transform: translateY(-3px);
+}
+
+.alert-info {
+  background: linear-gradient(135deg, rgba(23, 162, 184, 0.05) 0%, rgba(23, 162, 184, 0.1) 100%);
+  border-left: 3px solid #17a2b8;
+  border-radius: 10px;
+  color: #0c5460;
+  padding: 1rem;
+  margin-top: 1.5rem;
+}
+
+.alert-info p {
+  margin-bottom: 0;
+}
+
+.row {
+  animation-delay: calc(var(--animation-order) * 0.1s);
+}
+
+/* For alternating animation of symptom checkboxes */
+.col-md-6:nth-child(odd) .symptom-checkbox {
+  animation-delay: calc(var(--animation-order) * 0.05s);
+}
+
+.col-md-6:nth-child(even) .symptom-checkbox {
+  animation-delay: calc((var(--animation-order) + 10) * 0.05s);
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 767.98px) {
+  .btn-outline-primary {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+  
+  .mt-4 {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+}
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-5">
     <div class="row">
         <div class="col-lg-8 mx-auto">
-            <div class="card">
+            <div class="card" data-aos="fade-up">
                 <div class="card-header">
-                    <h2 class="mb-0">Advanced Symptom Checker</h2>
+                    <h2 class="mb-0">
+                        <i data-feather="activity" class="me-2 text-primary"></i>
+                        Advanced Symptom Checker
+                    </h2>
                 </div>
                 <div class="card-body">
                     <p class="lead">Select all symptoms you are currently experiencing:</p>
@@ -20,7 +192,7 @@
                     <form action="/predict_disease" method="post" class="needs-validation">
                         <div class="row">
                             {% for symptom in symptoms %}
-                            <div class="col-md-6">
+                            <div class="col-md-6" style="--animation-order: {{ loop.index }}">
                                 <div class="symptom-checkbox mb-3">
                                     <input class="form-check-input" type="checkbox" name="symptoms" value="{{ symptom }}" id="{{ symptom }}">
                                     <label class="form-check-label" for="{{ symptom }}">
@@ -32,12 +204,16 @@
                         </div>
                         
                         <div class="mt-4 text-center">
-                            <button type="submit" class="btn btn-primary">Analyze Symptoms</button>
-                            <button type="reset" class="btn btn-outline-primary">Clear Selection</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i data-feather="search" class="me-2"></i> Analyze Symptoms
+                            </button>
+                            <button type="reset" class="btn btn-outline-primary">
+                                <i data-feather="refresh-cw" class="me-2"></i> Clear Selection
+                            </button>
                         </div>
                     </form>
                     
-                    <div class="alert alert-info mt-4">
+                    <div class="alert alert-info mt-4" data-aos="fade-up" data-aos-delay="300">
                         <p class="mb-0"><strong>Note:</strong> This tool is for informational purposes only and does not replace professional medical advice. Always consult with a healthcare provider for proper diagnosis and treatment.</p>
                     </div>
                 </div>
