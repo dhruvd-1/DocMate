@@ -3,16 +3,22 @@ import os
 import re
 import json
 import tempfile
+import sqlite3  # Ensure this is imported at the top level
 import numpy as np
 import pandas as pd
 from werkzeug.utils import secure_filename
 from datetime import datetime
 
 # Import custom modules
+from models.database import init_db, save_note, save_summary, get_all_notes, get_note_by_id, delete_note, import_existing_notes, DB_PATH
 from models.lipid_analyzer import analyze_lipid_profile, get_population_percentile, extract_data_from_pdf, is_valid_extraction
 from models.symptom_checker import predict_disease, get_common_symptoms
-from models.notes_processor import extract_medical_info, get_all_notes, save_note, save_edited_summary, transcribe_audio
+from models.notes_processor import extract_medical_info, get_all_notes, save_note, save_edited_summary, get_edited_summary, transcribe_audio
 from models.chatbot_handler import ChatbotHandler
+
+# Initialize the database and import existing notes when the app starts
+init_db()
+import_existing_notes()  # This will import notes from notes.txt
 
 # Optional: Import AI model if available
 try:
@@ -51,6 +57,7 @@ os.makedirs('summaries', exist_ok=True)  # Directory for saved summaries
 def allowed_file(filename):
     """Check if file has an allowed extension"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
 # Routes
 @app.route('/')
 def home():
@@ -211,86 +218,311 @@ def note():
     """Medical notes page"""
     return render_template('note.html')
 
-@app.route('/get_notes', methods=['GET'])
-def fetch_notes():
-    """API endpoint to get all saved notes"""
-    notes = get_all_notes()
-    processed_notes = []
-    
-    for note in notes:
-        # Process each note with AI if available, otherwise use basic extraction
-        if genai_model:
-            summary = extract_medical_info(note, genai_model)
-        else:
-            summary = extract_medical_info(note)
-            
-        processed_notes.append({
-            "original": note,
-            "summary": summary
-        })
-        
-    return jsonify(processed_notes)
-
 @app.route('/save_note', methods=['POST'])
 def save_note_route():
     """API endpoint to save a new note"""
-    data = request.get_json()
-    note = data['note']
-    
-    # Save the note
-    save_success = save_note(note)
-    
-    if not save_success:
+    try:
+        data = request.get_json()
+        if not data or 'note' not in data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Missing note text in request'
+            }), 400
+            
+        note_text = data['note']
+        
+        if not note_text or not isinstance(note_text, str):
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid note text'
+            }), 400
+            
+        print(f"Attempting to save note: {note_text[:50]}...")
+        
+        # Save the note to the database
+        note_id = save_note(note_text)
+        
+        if note_id is None:
+            return jsonify({
+                'status': 'error',
+                'message': 'Failed to save note to database'
+            }), 500
+            
+        # Make sure note_id is not a boolean
+        if isinstance(note_id, bool):
+            print(f"WARNING: save_note returned boolean {note_id}, converting to string ID")
+            # Generate a numeric ID instead
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute('SELECT id FROM notes ORDER BY id DESC LIMIT 1')
+            result = cursor.fetchone()
+            conn.close()
+            
+            if result:
+                note_id = result[0]
+            else:
+                note_id = str(int(datetime.now().timestamp()))
+        
+        print(f"Note saved with ID: {note_id}, Type: {type(note_id)}")
+        
+        # Process the note
+        try:
+            if 'genai_model' in globals() and genai_model:
+                summary = extract_medical_info(note_text, genai_model)
+            else:
+                summary = extract_medical_info(note_text)
+                
+            if not summary:
+                print("Warning: extract_medical_info returned empty summary")
+                # Create a minimal summary
+                summary = {
+                    "patient_details": {"name": "Unknown Patient"},
+                    "chief_complaints": [],
+                    "symptoms": [],
+                    "allergies": []
+                }
+        except Exception as e:
+            print(f"Error generating summary: {str(e)}")
+            # Create a minimal summary as fallback
+            summary = {
+                "patient_details": {"name": "Unknown Patient"},
+                "chief_complaints": [],
+                "symptoms": [],
+                "allergies": []
+            }
+        
+        # Save the generated summary
+        summary_saved = save_summary(note_id, summary)
+        if not summary_saved:
+            print("Warning: Failed to save summary")
+        
+        # Return success
+        return jsonify({
+            'status': 'success',
+            'id': note_id,
+            'original': note_text,
+            'summary': summary
+        })
+        
+    except Exception as e:
+        print(f"Error in save_note_route: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'status': 'error',
-            'message': 'Failed to save note'
+            'message': f'Server error: {str(e)}'
         }), 500
-        
-    # Process the note
-    if genai_model:
-        summary = extract_medical_info(note, genai_model)
-    else:
-        summary = extract_medical_info(note)
-    
-    return jsonify({
-        'status': 'success',
-        'original': note,
-        'summary': summary
-    })
 
+@app.route('/save_edited_note', methods=['POST'])
+def save_edited_note_route():
+    """API endpoint to save an edited note"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'noteId' not in data or 'editedText' not in data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Note ID and edited text are required'
+            }), 400
+        
+        note_id = data['noteId']
+        edited_text = data['editedText']
+        
+        print(f"Edit request for note ID: {note_id}, Type: {type(note_id)}")
+        
+        # Handle the case where note_id is a boolean (true/false)
+        if note_id is True or note_id == 'true':
+            print("WARNING: Converting boolean 'true' to numeric ID")
+            # Get the most recent note as a fallback
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute('SELECT id FROM notes ORDER BY id DESC LIMIT 1')
+            result = cursor.fetchone()
+            conn.close()
+            
+            if result:
+                note_id = result[0]
+                print(f"Using most recent note ID: {note_id}")
+            else:
+                # Generate a timestamp-based ID as absolute fallback
+                note_id = str(int(datetime.now().timestamp()))
+                print(f"Generated timestamp-based ID: {note_id}")
+        elif note_id is False or note_id == 'false':
+            return jsonify({
+                'status': 'error',
+                'message': 'Cannot edit note with boolean ID "false"'
+            }), 400
+        elif isinstance(note_id, str) and note_id.startswith('temp-'):
+            # This is a temporary ID; find the newest note in the database
+            print(f"Received temp ID {note_id}, looking for real ID")
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute('SELECT id FROM notes ORDER BY id DESC LIMIT 1')
+            result = cursor.fetchone()
+            conn.close()
+            
+            if result:
+                note_id = result[0]
+                print(f"Using most recent note ID: {note_id}")
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'No notes found in database'
+                }), 404
+        else:
+            # Convert string ID to integer if needed
+            try:
+                if isinstance(note_id, str) and note_id.isdigit():
+                    note_id = int(note_id)
+            except (ValueError, TypeError) as e:
+                print(f"Error converting note ID: {str(e)}")
+        
+        # Check if the note exists
+        original_note = get_note_by_id(note_id)
+        print(f"Checking for note with ID {note_id}: {'Found' if original_note else 'Not found'}")
+        
+        if not original_note:
+            return jsonify({
+                'status': 'error',
+                'message': f'Note with ID {note_id} not found in database'
+            }), 404
+            
+        # Update the note text
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute('UPDATE notes SET text = ? WHERE id = ?', (edited_text, note_id))
+        update_success = cursor.rowcount > 0
+        conn.commit()
+        conn.close()
+        
+        if not update_success:
+            return jsonify({
+                'status': 'error',
+                'message': 'Failed to update note text'
+            }), 500
+            
+        # Re-process the note if needed to update summary
+        if 'genai_model' in globals() and genai_model:
+            summary = extract_medical_info(edited_text, genai_model)
+        else:
+            summary = extract_medical_info(edited_text)
+            
+        # Save the updated summary
+        save_summary(note_id, summary, is_edited=True)
+        
+        # Get the updated note
+        updated_note = get_note_by_id(note_id)
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Note updated successfully',
+            'note': updated_note
+        })
+            
+    except Exception as e:
+        print(f"Error in save_edited_note_route: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': 'error',
+            'message': f'Server error: {str(e)}'
+        }), 500
+    
 @app.route('/save_edited_summary', methods=['POST'])
 def save_edited_summary_route():
     """API endpoint to save an edited summary"""
-    data = request.get_json()
-    
-    if not data or 'noteId' not in data or 'editedSummary' not in data or 'originalSummary' not in data:
+    try:
+        data = request.get_json()
+        
+        if not data or 'noteId' not in data or 'editedSummary' not in data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid data provided'
+            }), 400
+        
+        note_id = data['noteId']
+        edited_summary = data['editedSummary']
+        
+        # Handle temporary or boolean IDs
+        if isinstance(note_id, bool) or note_id == 'true' or note_id == 'false' or (isinstance(note_id, str) and note_id.startswith('temp-')):
+            print(f"WARNING: Problematic note ID: {note_id}, looking for real ID")
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute('SELECT id FROM notes ORDER BY id DESC LIMIT 1')
+            result = cursor.fetchone()
+            conn.close()
+            
+            if result:
+                note_id = result[0]
+                print(f"Using most recent note ID: {note_id}")
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'message': f'Cannot resolve note ID {note_id} to a valid database ID'
+                }), 400
+        
+        # Save the edited summary
+        success = save_summary(note_id, edited_summary, is_edited=True)
+        
+        if success:
+            return jsonify({
+                'status': 'success',
+                'message': 'Summary saved successfully'
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Failed to save summary'
+            }), 500
+            
+    except Exception as e:
+        print(f"Error in save_edited_summary_route: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'status': 'error',
-            'message': 'Invalid data provided'
-        }), 400
-    
-    note_id = data['noteId']
-    edited_summary = data['editedSummary']
-    original_summary = data['originalSummary']
-    
-    # Save edited summary
-    save_success, filename = save_edited_summary(note_id, {
-        'edited_summary': edited_summary,
-        'original_summary': original_summary,
-        'timestamp': datetime.now().isoformat()
-    })
-    
-    if not save_success:
-        return jsonify({
-            'status': 'error',
-            'message': 'Failed to save edited summary'
+            'message': f'Server error: {str(e)}'
         }), 500
-    
-    return jsonify({
-        'status': 'success',
-        'message': 'Summary saved successfully',
-        'filename': filename
-    })
+
+@app.route('/get_notes', methods=['GET'])
+def fetch_notes():
+    """API endpoint to get all saved notes with filtering for empty/invalid notes"""
+    try:
+        notes = get_all_notes()
+        
+        if notes is None:
+            print("Error: get_all_notes() returned None")
+            return jsonify([])  # Return empty array instead of error
+            
+        # Filter out empty notes or placeholder notes
+        valid_notes = []
+        for note in notes:
+            # Skip notes that don't have proper content or are just placeholders
+            if not note or not note.get('original') or not note.get('summary'):
+                continue
+                
+            # Skip notes with empty or default summaries
+            summary = note.get('summary', {})
+            if not summary or (summary.get('patient_details', {}).get('name') == 'Unknown Patient' and 
+                              not any(summary.get(key, []) for key in ['chief_complaints', 'symptoms', 'allergies'])):
+                continue
+                
+            # Ensure note has a proper ID (not a boolean)
+            if isinstance(note.get('id'), bool):
+                print(f"WARNING: Found note with boolean ID: {note.get('id')}")
+                # Replace with a timestamp-based ID
+                note['id'] = str(int(datetime.now().timestamp()))
+                
+            valid_notes.append(note)
+        
+        return jsonify(valid_notes)
+    except Exception as e:
+        # Log the error
+        print(f"Error in fetch_notes: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        # Return a proper error response
+        return jsonify([])  # Return empty array instead of error
 
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
@@ -339,6 +571,157 @@ def upload_audio():
             'status': 'error',
             'message': 'Invalid file type. Allowed types: mp3, wav, ogg, m4a'
         }), 400
+
+@app.route('/delete_note', methods=['POST'])
+def delete_note_route():
+    """API endpoint to delete a note"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'noteId' not in data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Note ID is required'
+            }), 400
+        
+        # Get the note ID from request
+        note_id = data['noteId']
+        
+        print(f"Delete request for note ID: {note_id}, Type: {type(note_id)}")
+        
+        # Handle the case where note_id is a boolean or temporary ID
+        if note_id is True or note_id == 'true':
+            print("WARNING: Converting boolean 'true' to numeric ID")
+            # Get the most recent note as a fallback
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute('SELECT id FROM notes ORDER BY id DESC LIMIT 1')
+            result = cursor.fetchone()
+            conn.close()
+            
+            if result:
+                note_id = result[0]
+                print(f"Using most recent note ID: {note_id}")
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Cannot delete with boolean ID and no notes exist'
+                }), 400
+        elif note_id is False or note_id == 'false':
+            return jsonify({
+                'status': 'error',
+                'message': 'Cannot delete note with boolean ID "false"'
+            }), 400
+        elif isinstance(note_id, str) and note_id.startswith('temp-'):
+            # This is a temporary ID; find the newest note in the database
+            print(f"Received temp ID {note_id}, looking for real ID")
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute('SELECT id FROM notes ORDER BY id DESC LIMIT 1')
+            result = cursor.fetchone()
+            conn.close()
+            
+            if result:
+                note_id = result[0]
+                print(f"Using most recent note ID: {note_id}")
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'No notes found in database'
+                }), 404
+        else:
+            # Convert string ID to integer if needed
+            try:
+                if isinstance(note_id, str) and note_id.isdigit():
+                    note_id = int(note_id)
+            except (ValueError, TypeError) as e:
+                print(f"Error converting note ID: {str(e)}")
+        
+        # Check if the note exists
+        existing_note = get_note_by_id(note_id)
+        print(f"Checking for note with ID {note_id}: {'Found' if existing_note else 'Not found'}")
+        
+        if not existing_note:
+            return jsonify({
+                'status': 'error',
+                'message': f'Note with ID {note_id} not found in database'
+            }), 404
+        
+        # Delete the note
+        success = delete_note(note_id)
+        print(f"Note deletion result: {success}")
+        
+        if success:
+            return jsonify({
+                'status': 'success',
+                'message': 'Note deleted successfully'
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Failed to delete note'
+            }), 500
+            
+    except Exception as e:
+        print(f"Error in delete_note_route: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': 'error',
+            'message': f'Server error: {str(e)}'
+        }), 500
+            
+@app.route('/diagnose_database', methods=['GET'])
+def diagnose_database():
+    """Diagnostic endpoint to check database status"""
+    try:
+        # List all tables
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = cursor.fetchall()
+        
+        # Count records in each table
+        counts = {}
+        for table in tables:
+            table_name = table[0]
+            cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+            count = cursor.fetchone()[0]
+            counts[table_name] = count
+        
+        # Sample records from notes table
+        notes_sample = []
+        if 'notes' in [t[0] for t in tables]:
+            cursor.execute("SELECT id, text, created_at FROM notes LIMIT 5")
+            columns = [desc[0] for desc in cursor.description]
+            for row in cursor.fetchall():
+                notes_sample.append(dict(zip(columns, row)))
+        
+        # Sample records from summaries table
+        summaries_sample = []
+        if 'summaries' in [t[0] for t in tables]:
+            cursor.execute("SELECT id, note_id, is_edited, created_at FROM summaries LIMIT 5")
+            columns = [desc[0] for desc in cursor.description]
+            for row in cursor.fetchall():
+                summaries_sample.append(dict(zip(columns, row)))
+        
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'database_path': DB_PATH,
+            'tables': [t[0] for t in tables],
+            'record_counts': counts,
+            'notes_sample': notes_sample,
+            'summaries_sample': summaries_sample
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': f'Error diagnosing database: {str(e)}'
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
