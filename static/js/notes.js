@@ -66,6 +66,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 startBtn.classList.remove('active');
                 startBtn.disabled = false;
                 stopBtn.disabled = true;
+                
+                // ADD THE NEW CODE HERE
+                console.log("=== STARTING PATIENT DETECTION ===");
+                console.log("Transcript text:", finalTranscript.substring(0, 100) + "...");
+                const patientDetails = extractPatientDetailsFromText(finalTranscript);
+                console.log("Extracted patient details:", patientDetails);
+                if (patientDetails && patientDetails.name && patientDetails.age) {
+                    console.log("=== ATTEMPTING HISTORY RETRIEVAL ===");
+                    console.log(`Looking for history for: ${patientDetails.name}, ${patientDetails.age}`);
+                    retrievePreviousPatientHistory(patientDetails.name, patientDetails.age)
+                        .then(history => {
+                            console.log("History retrieval complete, result:", history ? "Found" : "Not found");
+                        });
+                } else {
+                    console.log("=== PATIENT DETECTION FAILED ===");
+                    console.log("Could not extract valid patient name and age from transcript");
+                }
+                // END OF NEW CODE
             };
         } else {
             startBtn.disabled = true;
@@ -228,202 +246,202 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Handle audio file upload and transcription
-    function handleAudioUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        // Check if it's an audio file
-        if (!file.type.startsWith('audio/')) {
-            showToast('Please upload an audio file', 'error');
-            return;
-        }
-        
-        // Create a URL for the audio file preview (works for all audio types)
-        const audioUrl = URL.createObjectURL(file);
-        audioPlayer.src = audioUrl;
-        audioPlayerContainer.style.display = 'block';
-        
-        // Check file size - large files might have issues
-        const maxSizeMB = 10;
-        const fileSizeMB = file.size / (1024 * 1024);
-        if (fileSizeMB > maxSizeMB) {
-            showToast(`File is ${fileSizeMB.toFixed(1)}MB. Large files may cause issues. Consider using a smaller file.`, 'warning');
-        }
-        
-        // Check if it's a WAV file
-        const isWav = file.name.toLowerCase().endsWith('.wav');
-        
-        if (!isWav) {
-            showToast('Note: Only WAV files can be transcribed. For best results, use a WAV file.', 'warning');
-            
-            // Add suggestion for conversion
-            const conversionSuggestion = document.createElement('div');
-            conversionSuggestion.className = 'alert alert-info mt-3';
-            conversionSuggestion.innerHTML = `
-                <h5><i data-feather="info" class="me-2"></i> Audio Format Tip</h5>
-                <p>To transcribe this audio, please convert it to WAV format using an online converter such as:</p>
-                <ul>
-                    <li><a href="https://online-audio-converter.com/" target="_blank">Online Audio Converter</a></li>
-                    <li><a href="https://convertio.co/audio-converter/" target="_blank">Convertio</a></li>
-                </ul>
-                <p>Then upload the converted WAV file for transcription.</p>
-            `;
-            
-            // Add this suggestion to the page
-            if (audioPlayerContainer.nextElementSibling !== conversionSuggestion) {
-                if (document.querySelector('.alert-info')) {
-                    document.querySelector('.alert-info').remove();
-                }
-                audioPlayerContainer.parentNode.insertBefore(conversionSuggestion, audioPlayerContainer.nextSibling);
-                feather.replace(); // Refresh icons
-            }
-            
-            return;
-        }
-        
-        // If it's a WAV file, proceed with transcription
-        const loadingIndicator = document.createElement('div');
-        loadingIndicator.className = 'transcription-loading';
-        loadingIndicator.innerHTML = `
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Transcribing...</span>
-            </div>
-            <p>Transcribing audio... This may take a minute for longer recordings.</p>
-        `;
-        
-        // Add loading indicator to the page
-        audioPlayerContainer.parentNode.insertBefore(loadingIndicator, audioPlayerContainer.nextSibling);
-        
-        // Show toast
-        showToast('Transcribing audio file... Please wait.', 'info');
-        
-        // Create a FormData object to send the file
-        const formData = new FormData();
-        formData.append('audio_file', file);
-        
-        // Send the file to the server for transcription
-        fetch('/upload_audio', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Remove loading indicator
-            if (document.querySelector('.transcription-loading')) {
-                document.querySelector('.transcription-loading').remove();
-            }
-            
-            if (data.status === 'success') {
-                // Set the transcription in the transcript div
-                transcriptDiv.innerText = data.transcription;
-                finalTranscript = data.transcription;
-                
-                showToast('Audio transcription complete', 'success');
-                
-                // Add quality indicator if the transcription seems short
-                const wordCount = data.transcription.split(' ').length;
-                const audioLength = audioPlayer.duration;
-                
-                if (wordCount < 10 && audioLength > 10) {
-                    showToast('Transcription seems brief. The audio might not be clear enough.', 'warning');
-                    
-                    // Add transcription tips
-                    const transcriptionTips = document.createElement('div');
-                    transcriptionTips.className = 'alert alert-info mt-3';
-                    transcriptionTips.innerHTML = `
-                        <h5><i data-feather="mic" class="me-2"></i> Transcription Tips</h5>
-                        <p>For better transcription results:</p>
-                        <ul>
-                            <li>Ensure the audio is clear with minimal background noise</li>
-                            <li>Speak clearly and at a moderate pace</li>
-                            <li>Use a quality microphone if recording directly</li>
-                            <li>Keep the microphone close to the speaker</li>
-                        </ul>
-                    `;
-                    
-                    // Add tips to the page
-                    if (!document.querySelector('.alert-info')) {
-                        audioPlayerContainer.parentNode.insertBefore(transcriptionTips, audioPlayerContainer.nextSibling);
-                        feather.replace(); // Refresh icons
-                    }
-                }
-            } else {
-                const errorMessage = data.message || 'Failed to transcribe audio. Please try again or enter text manually.';
-                transcriptDiv.innerText = errorMessage;
-                showToast(errorMessage, 'error');
-            }
-        })
-        .catch(error => {
-            // Remove loading indicator
-            if (document.querySelector('.transcription-loading')) {
-                document.querySelector('.transcription-loading').remove();
-            }
-            
-            console.error('Error uploading and transcribing audio:', error);
-            showToast('Error processing audio file. Please try again or type notes manually.', 'error');
-        });
-    }
-
-    // Save the current note
-    // Save the current note
-    // Updated saveNote function to immediately update UI
-    // Fixed saveNote function in notes.js to properly handle IDs from server
-
-function saveNote() {
-    const noteText = transcriptDiv.innerText.trim();
-    if (noteText === '') {
-        showToast('Please record or type a note first', 'warning');
+    // Complete handleAudioUpload function with patient history retrieval
+function handleAudioUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Check if it's an audio file
+    if (!file.type.startsWith('audio/')) {
+        showToast('Please upload an audio file', 'error');
         return;
     }
-
-    // Show loading indicator
-    showToast('Processing note...', 'info');
-
-    fetch('/save_note', {
+    
+    // Create a URL for the audio file preview (works for all audio types)
+    const audioUrl = URL.createObjectURL(file);
+    audioPlayer.src = audioUrl;
+    audioPlayerContainer.style.display = 'block';
+    
+    // Check file size - large files might have issues
+    const maxSizeMB = 10;
+    const fileSizeMB = file.size / (1024 * 1024);
+    if (fileSizeMB > maxSizeMB) {
+        showToast(`File is ${fileSizeMB.toFixed(1)}MB. Large files may cause issues. Consider using a smaller file.`, 'warning');
+    }
+    
+    // Show conversion indication for non-WAV files
+    const isWav = file.name.toLowerCase().endsWith('.wav');
+    
+    if (!isWav) {
+        showToast('Converting audio format to WAV for transcription...', 'info');
+    }
+    
+    // Create loading indicator
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.className = 'transcription-loading';
+    loadingIndicator.innerHTML = `
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Processing audio...</span>
+        </div>
+        <p>${isWav ? 'Transcribing' : 'Converting and transcribing'} audio... This may take a minute for longer recordings.</p>
+    `;
+    
+    // Add loading indicator to the page
+    audioPlayerContainer.parentNode.insertBefore(loadingIndicator, audioPlayerContainer.nextSibling);
+    
+    // Create a FormData object to send the file
+    const formData = new FormData();
+    formData.append('audio_file', file);
+    
+    // Send the file to the server for transcription
+    fetch('/upload_audio', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ note: noteText })
+        body: formData
     })
-    .then(res => {
-        if (!res.ok) {
-            throw new Error(`Server returned ${res.status}: ${res.statusText}`);
-        }
-        return res.json();
-    })
+    .then(response => response.json())
     .then(data => {
-        console.log('Note saved response:', data);
-        
-        // Check for proper ID
-        if (data.id === true || data.id === false) {
-            console.error("ERROR: Received boolean ID from server:", data.id);
-            // Fix the boolean ID issue by generating a temporary ID
-            data.id = `temp-${Date.now()}`;
-            console.log("Generated temporary ID:", data.id);
+        // Remove loading indicator
+        if (document.querySelector('.transcription-loading')) {
+            document.querySelector('.transcription-loading').remove();
         }
         
-        // Check if we currently have the empty state showing
-        const emptyStateContainer = document.querySelector('.empty-state-container');
-        if (emptyStateContainer) {
-            // Clear the empty state
-            notesContainer.innerHTML = '';
+        if (data.status === 'success') {
+            // Set the transcription in the transcript div
+            transcriptDiv.innerText = data.transcription;
+            finalTranscript = data.transcription;
+            
+            showToast('Audio transcription complete', 'success');
+
+            console.log("=== STARTING PATIENT DETECTION ===");
+            console.log("Transcript text:", finalTranscript.substring(0, 100) + "...");
+
+            // NEW: Extract patient details and check for previous history
+            const patientDetails = extractPatientDetailsFromText(finalTranscript);
+            console.log("Extracted patient details:", patientDetails);
+
+            if (patientDetails && patientDetails.name && patientDetails.age) {
+                console.log("=== ATTEMPTING HISTORY RETRIEVAL ===");
+                console.log(`Looking for history for: ${patientDetails.name}, ${patientDetails.age}`);
+                retrievePreviousPatientHistory(patientDetails.name, patientDetails.age)
+                    .then(history => {
+                        console.log("History retrieval complete, result:", history ? "Found" : "Not found");
+                    });
+            } else {
+                console.log("=== PATIENT DETECTION FAILED ===");
+                console.log("Could not extract valid patient name and age from transcript");
+            }
+            
+            // Add quality indicator if the transcription seems short
+            const wordCount = data.transcription.split(' ').length;
+            const audioLength = audioPlayer.duration;
+            
+            if (wordCount < 10 && audioLength > 10) {
+                showToast('Transcription seems brief. The audio might not be clear enough.', 'warning');
+                
+                // Add transcription tips
+                const transcriptionTips = document.createElement('div');
+                transcriptionTips.className = 'alert alert-info mt-3';
+                transcriptionTips.innerHTML = `
+                    <h5><i data-feather="mic" class="me-2"></i> Transcription Tips</h5>
+                    <p>For better transcription results:</p>
+                    <ul>
+                        <li>Ensure the audio is clear with minimal background noise</li>
+                        <li>Speak clearly and at a moderate pace</li>
+                        <li>Use a quality microphone if recording directly</li>
+                        <li>Keep the microphone close to the speaker</li>
+                    </ul>
+                `;
+                
+                // Add tips to the page
+                if (!document.querySelector('.alert-info')) {
+                    audioPlayerContainer.parentNode.insertBefore(transcriptionTips, audioPlayerContainer.nextSibling);
+                    feather.replace(); // Refresh icons
+                }
+            }
+        } else {
+            const errorMessage = data.message || 'Failed to transcribe audio. Please try again or enter text manually.';
+            transcriptDiv.innerText = '';
+            showToast(errorMessage, 'error');
         }
-        
-        // Create and display the new note
-        createNoteCard(data);
-        
-        // Clear the transcript and audio
-        finalTranscript = '';
-        transcriptDiv.innerText = '';
-        audioPlayerContainer.style.display = 'none';
-        audioPlayer.src = '';
-        
-        showToast('Note saved successfully', 'success');
     })
     .catch(error => {
-        console.error('Error saving note:', error);
-        showToast(`Failed to save note: ${error.message}`, 'error');
+        // Remove loading indicator
+        if (document.querySelector('.transcription-loading')) {
+            document.querySelector('.transcription-loading').remove();
+        }
+        
+        console.error('Error uploading and transcribing audio:', error);
+        showToast('Error processing audio file. Please try again or type notes manually.', 'error');
     });
 }
+    // Fixed saveNote function in notes.js to properly handle IDs from server
+
+    function saveNote() {
+        const noteText = transcriptDiv.innerText.trim();
+        if (noteText === '') {
+            showToast('Please record or type a note first', 'warning');
+            return;
+        }
+        
+        // Show loading indicator
+        showToast('Processing note...', 'info');
+    
+        fetch('/save_note', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                note: noteText,
+                imported_history: window.importedPatientHistory || null  // Include any imported history
+            })
+        })
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`Server returned ${res.status}: ${res.statusText}`);
+            }
+            return res.json();
+        })
+        .then(data => {
+            console.log('Note saved response:', data);
+            
+            // Check for proper ID
+            if (data.id === true || data.id === false) {
+                console.error("ERROR: Received boolean ID from server:", data.id);
+                // Fix the boolean ID issue by generating a temporary ID
+                data.id = `temp-${Date.now()}`;
+                console.log("Generated temporary ID:", data.id);
+            }
+            
+            // Check if we currently have the empty state showing
+            const emptyStateContainer = document.querySelector('.empty-state-container');
+            if (emptyStateContainer) {
+                // Clear the empty state
+                notesContainer.innerHTML = '';
+            }
+            
+            // Create and display the new note
+            createNoteCard(data);
+            
+            // Clear the transcript and audio
+            finalTranscript = '';
+            transcriptDiv.innerText = '';
+            audioPlayerContainer.style.display = 'none';
+            audioPlayer.src = '';
+            
+            // Clear any imported history notification
+            if (document.querySelector('.history-notification')) {
+                document.querySelector('.history-notification').remove();
+            }
+            
+            // Reset the imported history
+            window.importedPatientHistory = null;
+            
+            showToast('Note saved successfully', 'success');
+        })
+        .catch(error => {
+            console.error('Error saving note:', error);
+            showToast(`Failed to save note: ${error.message}`, 'error');
+        });
+    }
 
     // Helper function to check if we're in empty state
     function isEmptyState() {
@@ -780,44 +798,98 @@ noteCard.querySelector('.delete-btn').addEventListener('click', function() {
 });
 }
     // Open note details modal
-    // In your openNoteDetails function, modify the code to add this:
-function openNoteDetails(noteData, noteId) {
+    function openNoteDetails(noteData, noteId) {
     // Store current note ID and summary
-    currentNoteId = noteId; // This is critical - use the passed ID, not a hardcoded one
+    currentNoteId = noteId;
     console.log("Opening note details with ID:", currentNoteId);
     
     currentSummary = prepareSummaryStructure(noteData.summary);
     
+    // Extract patient name from the summary with better error handling
+    let extractedPatientName = '';
+    if (noteData.summary && 
+        noteData.summary.patient_details && 
+        noteData.summary.patient_details.name) {
+        extractedPatientName = noteData.summary.patient_details.name;
+        console.log("Found patient name in summary:", extractedPatientName);
+    } else {
+        // Try to look for patient name elsewhere if not in the expected location
+        if (noteData.summary) {
+            console.log("Summary object exists but patient_details or name is missing");
+            console.log("Available summary keys:", Object.keys(noteData.summary));
+            
+            // Try to find patient name in other potential locations
+            if (noteData.summary.patient && noteData.summary.patient.name) {
+                extractedPatientName = noteData.summary.patient.name;
+                console.log("Found patient name in summary.patient.name:", extractedPatientName);
+            } else if (noteData.summary.patient_name) {
+                extractedPatientName = noteData.summary.patient_name;
+                console.log("Found patient name in summary.patient_name:", extractedPatientName);
+            }
+        } else {
+            console.warn("Note summary is undefined or null");
+        }
+    }
+    
     // Set original note content
-    originalNoteContent.textContent = noteData.original;
+    if (originalNoteContent) {
+        originalNoteContent.textContent = noteData.original;
+    } else {
+        console.error("originalNoteContent element not found");
+    }
     
     // Format and display the summary
     formatSummaryContent(currentSummary);
     
     // Reset editing state and ensure buttons are properly set up
-    summaryContent.contentEditable = "true"; // Changed to true by default to encourage editing
-    if (editSummaryBtn) {
-        editSummaryBtn.style.display = 'none';
-    }
-    if (saveSummaryBtn) {
-        saveSummaryBtn.style.display = 'inline-block';
-        
-        // Add these lines to ensure the save button works
-        saveSummaryBtn.onclick = null; // Remove any existing handlers
-        
-        // Add a direct onclick handler
-        saveSummaryBtn.onclick = function(event) {
-            console.log("Save button clicked directly from modal for note ID:", currentNoteId);
-            event.preventDefault();
-            event.stopPropagation(); // Stop event bubbling
-            saveEditedSummary();
-            return false; // Ensure no default action
-        };
+    if (summaryContent) {
+        summaryContent.contentEditable = "false";
     }
     
-    // Open the modal
+    if (editSummaryBtn) {
+        editSummaryBtn.style.display = 'inline-block';
+    }
+    
+    if (saveSummaryBtn) {
+        saveSummaryBtn.style.display = 'none';
+    }
+    
+    // Remove any existing follow-up or analysis sections
+    const existingFollowUp = document.querySelector('[id^="follow-up-section-"]');
+    if (existingFollowUp) {
+        console.log("Removing existing follow-up section before adding new one");
+        existingFollowUp.remove();
+    }
+    
+    const existingAnalysis = document.getElementById('efficacy-analysis-section');
+    if (existingAnalysis) {
+        console.log("Removing existing treatment efficacy section");
+        existingAnalysis.remove();
+    }
+    
+    // Show the modal
     noteDetailsModal.show();
+    
+    // Add follow-up actions and treatment efficacy analysis after the modal is shown
+    // Use setTimeout to ensure the modal is fully rendered
+    setTimeout(() => {
+        // Add a debug log to check if addFollowUpActions is being called
+        console.log(`Calling addFollowUpActions for note ID: ${noteId}`);
+        addFollowUpActions(noteId);
+        
+        // Check if we have a valid patient name before adding treatment efficacy analysis
+        if (extractedPatientName && extractedPatientName.trim() !== '') {
+            // Store the patient name in a data attribute on the modal for future reference
+            document.getElementById('noteDetailsModal').dataset.patientName = extractedPatientName;
+            
+            console.log("Calling addTreatmentEfficacyAnalysis with patient name:", extractedPatientName);
+            addTreatmentEfficacyAnalysis(extractedPatientName, noteId);
+        } else {
+            console.warn("Not adding treatment efficacy analysis: No patient name found");
+        }
+    }, 300);
 }
+    
     // Edit note function - NEW FEATURE
     function editNote(noteData, noteId) {
     // Clear any previous editing state
@@ -1870,8 +1942,1597 @@ document.addEventListener('click', function(event) {
             saveEditedSummary();
         }
     });
+// Add this function after your existing functions
+function addFollowUpActions(noteId) {
+    // Skip if no note ID
+    if (!noteId) {
+        console.warn("Cannot generate follow-up actions: No note ID provided");
+        return;
+    }
+    
+    // Generate a unique ID for this note's follow-up section
+    const followUpSectionId = `follow-up-section-${noteId}`;
+    
+    // Log for debugging
+    console.log(`Adding follow-up actions for note ID: ${noteId} with section ID: ${followUpSectionId}`);
+    
+    // Create and add follow-up section
+    const modalBody = document.querySelector('#noteDetailsModal .modal-body');
+    if (!modalBody) {
+        console.error("Modal body not found - make sure the modal is in the DOM");
+        return;
+    }
+    
+    // Check if follow-up section already exists for THIS specific note
+    if (document.getElementById(followUpSectionId)) {
+        console.log(`Follow-up section for note ID ${noteId} already exists, removing it`);
+        document.getElementById(followUpSectionId).remove();
+    }
+    
+    console.log(`Creating follow-up section for note ID: ${noteId}`);
+    
+    // Create follow-up section with unique ID
+    const followUpSection = document.createElement('div');
+    followUpSection.id = followUpSectionId;
+    followUpSection.className = 'mt-4 pt-4 border-top';
+    
+    // Create the header with Generate button
+    const headerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5><i data-feather="check-square" class="me-2 text-primary"></i> Follow-up Action Items</h5>
+            <button id="generate-follow-up-btn-${noteId}" class="btn btn-sm btn-primary generate-follow-up-btn" data-note-id="${noteId}">
+                <i data-feather="list" class="btn-icon-sm"></i> Generate Actions
+            </button>
+        </div>
+    `;
+    
+    // Create the results container where the content will be loaded
+    const resultsHTML = `
+        <div id="follow-up-results-${noteId}" class="follow-up-results mt-3" style="display: none;">
+            <div class="follow-up-loading text-center py-4" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Generating...</span>
+                </div>
+                <p class="mt-2">Generating follow-up action items...</p>
+            </div>
+            <div class="follow-up-content" style="display: none;"></div>
+        </div>
+    `;
+    
+    followUpSection.innerHTML = headerHTML + resultsHTML;
+    modalBody.appendChild(followUpSection);
+    
+    // Initialize Feather icons
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    } else {
+        console.warn("Feather icons library not found");
+    }
+    
+    // First check if we already have follow-up actions
+    console.log(`Checking for existing follow-up actions for note ID: ${noteId}`);
+    
+    // Show a temporary "Checking..." message instead of the loading spinner
+    const resultsContainer = document.getElementById(`follow-up-results-${noteId}`);
+    const loadingElement = resultsContainer.querySelector('.follow-up-loading');
+    const contentElement = resultsContainer.querySelector('.follow-up-content');
+    
+    // Don't show the loading spinner right away
+    resultsContainer.style.display = 'block';
+    
+    fetch(`/get_follow_up?noteId=${noteId}`)
+        .then(response => {
+            console.log(`Response status from get_follow_up: ${response.status}`);
+            if (!response.ok) {
+                if (response.status === 404) {
+                    // No existing follow-up actions, but this is normal
+                    console.log(`No existing follow-up actions for note ID ${noteId} (404 response)`);
+                    return { status: "error", message: "No follow-up actions found" };
+                }
+                throw new Error(`Server returned status ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log(`Received data from get_follow_up:`, data);
+            if (data.status === 'success' && data.actions) {
+                console.log(`Found existing follow-up actions for note ID: ${noteId}, displaying them`);
+                displayFollowUpActions(data.actions, noteId);
+            } else {
+                console.log(`No follow-up actions for note ID ${noteId}: ${data.message || 'Unknown reason'}`);
+                // Don't show anything if no actions found
+            }
+        })
+        .catch(error => {
+            console.log(`Error checking follow-up actions for note ID ${noteId}:`, error.message);
+        });
+    
+    // Add event listener to generate button
+    const generateBtn = document.getElementById(`generate-follow-up-btn-${noteId}`);
+    if (generateBtn) {
+        generateBtn.addEventListener('click', function() {
+            const clickedNoteId = this.getAttribute('data-note-id');
+            console.log(`Generate follow-up button clicked for note ID: ${clickedNoteId}`);
+            
+            const resultsContainer = document.getElementById(`follow-up-results-${clickedNoteId}`);
+            if (!resultsContainer) {
+                console.error(`Results container for note ID ${clickedNoteId} not found`);
+                return;
+            }
+            
+            const loadingElement = resultsContainer.querySelector('.follow-up-loading');
+            const contentElement = resultsContainer.querySelector('.follow-up-content');
+            
+            // NOW show the loading spinner
+            resultsContainer.style.display = 'block';
+            loadingElement.style.display = 'block';
+            contentElement.style.display = 'none';
+            contentElement.innerHTML = ''; // Clear previous content
+            
+            console.log(`Sending request to generate follow-up actions for note ID: ${clickedNoteId}`);
+            // Generate follow-up actions
+            fetch('/generate_follow_up', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({noteId: clickedNoteId})
+            })
+            .then(response => {
+                console.log(`Response status from generate_follow_up: ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`Server returned status ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(`Received data from generate_follow_up:`, data);
+                // Hide loading
+                loadingElement.style.display = 'none';
+                
+                if (data.status === 'error') {
+                    contentElement.innerHTML = `
+                        <div class="alert alert-warning">
+                            ${data.message || 'Failed to generate follow-up actions.'}
+                        </div>
+                    `;
+                    contentElement.style.display = 'block';
+                    return;
+                }
+                
+                // Display the actions
+                console.log(`Displaying follow-up actions after generation for note ID: ${clickedNoteId}`);
+                displayFollowUpActions(data.actions, clickedNoteId);
+            })
+            .catch(error => {
+                console.error(`Error generating follow-up actions for note ID ${clickedNoteId}:`, error);
+                loadingElement.style.display = 'none';
+                contentElement.innerHTML = `
+                    <div class="alert alert-danger">
+                        An error occurred while generating follow-up actions: ${error.message}
+                    </div>
+                `;
+                contentElement.style.display = 'block';
+            });
+        });
+    } else {
+        console.error(`Generate follow-up button with ID generate-follow-up-btn-${noteId} not found after adding to DOM`);
+    }
+}
 
+function displayFollowUpActions(actions, noteId) {
+    // Make sure we have a note ID
+    if (!noteId) {
+        console.error("Cannot display follow-up actions: No note ID provided");
+        return;
+    }
+    console.log(`Displaying follow-up actions for note ID: ${noteId}`, actions);
 
+    // Find the content element specific to this note
+    const resultsContainer = document.getElementById(`follow-up-results-${noteId}`);
+    if (!resultsContainer) {
+        console.error(`Follow-up results container for note ID ${noteId} not found`);
+        return;
+    }
+    
+    const contentElement = resultsContainer.querySelector('.follow-up-content');
+    if (!contentElement) {
+        console.error(`Follow-up content element for note ID ${noteId} not found`);
+        return;
+    }
+    // Ensure the actions object has the expected properties
+    if (!actions || typeof actions !== 'object') {
+        console.error(`Invalid actions object for note ID ${noteId}:`, actions);
+        contentElement.innerHTML = `
+            <div class="alert alert-warning">
+                Invalid follow-up actions data received from server.
+            </div>
+        `;
+        contentElement.style.display = 'block';
+        resultsContainer.style.display = 'block';
+        return;
+    }
+    
+    // Format the follow-up date
+    let followUpDateFormatted = 'Not specified';
+    if (actions.follow_up_date) {
+        const followUpDate = new Date(actions.follow_up_date);
+        followUpDateFormatted = followUpDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+    
+    // Determine urgency badge class
+    let urgencyClass = 'bg-primary';
+    if (actions.urgency_level === 'urgent') {
+        urgencyClass = 'bg-danger';
+    } else if (actions.urgency_level === 'soon') {
+        urgencyClass = 'bg-warning text-dark';
+    }
+    
+    // Generate HTML content
+    let htmlContent = `
+        <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <span class="me-3">
+                        <strong>Follow-up Date:</strong> ${followUpDateFormatted}
+                    </span>
+                    <span class="badge ${urgencyClass} px-2 py-1">
+                        ${actions.urgency_level.charAt(0).toUpperCase() + actions.urgency_level.slice(1)}
+                    </span>
+                </div>
+                <button id="download-actions-btn-${noteId}" class="btn btn-sm btn-outline-primary download-actions-btn" data-note-id="${noteId}">
+                    <i data-feather="download" class="btn-icon-sm"></i> Download
+                </button>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header bg-light py-2">
+                        <h6 class="mb-0"><i data-feather="user" class="me-2 text-primary"></i> Patient Actions</h6>
+                    </div>
+                    <div class="card-body patient-actions">
+    `;
+    
+    // Add patient actions, grouped by priority
+    if (actions.patient_actions && actions.patient_actions.length > 0) {
+        // Group actions by priority
+        const highPriority = actions.patient_actions.filter(a => a.priority === 'high');
+        const mediumPriority = actions.patient_actions.filter(a => a.priority === 'medium');
+        const lowPriority = actions.patient_actions.filter(a => a.priority === 'low');
+        
+        // Add high priority actions
+        if (highPriority.length > 0) {
+            htmlContent += `<h6 class="mb-2 text-danger">High Priority</h6><ul class="action-list high-priority mb-3">`;
+            highPriority.forEach(action => {
+                htmlContent += `
+                    <li>
+                        <div class="d-flex align-items-start mb-2">
+                            <div class="action-icon me-2 text-danger">
+                                <i data-feather="alert-circle" style="width: 18px; height: 18px;"></i>
+                            </div>
+                            <div class="action-content">
+                                <div class="action-text">${action.action}</div>
+                                ${action.context ? `<div class="action-context small text-muted">${action.context}</div>` : ''}
+                            </div>
+                        </div>
+                    </li>
+                `;
+            });
+            htmlContent += `</ul>`;
+        }
+        
+        // Add medium priority actions
+        if (mediumPriority.length > 0) {
+            htmlContent += `<h6 class="mb-2 text-warning">Regular Priority</h6><ul class="action-list medium-priority mb-3">`;
+            mediumPriority.forEach(action => {
+                htmlContent += `
+                    <li>
+                        <div class="d-flex align-items-start mb-2">
+                            <div class="action-icon me-2 text-warning">
+                                <i data-feather="check-circle" style="width: 18px; height: 18px;"></i>
+                            </div>
+                            <div class="action-content">
+                                <div class="action-text">${action.action}</div>
+                                ${action.context ? `<div class="action-context small text-muted">${action.context}</div>` : ''}
+                            </div>
+                        </div>
+                    </li>
+                `;
+            });
+            htmlContent += `</ul>`;
+        }
+        
+        // Add low priority actions
+        if (lowPriority.length > 0) {
+            htmlContent += `<h6 class="mb-2 text-info">For Consideration</h6><ul class="action-list low-priority mb-3">`;
+            lowPriority.forEach(action => {
+                htmlContent += `
+                    <li>
+                        <div class="d-flex align-items-start mb-2">
+                            <div class="action-icon me-2 text-info">
+                                <i data-feather="info" style="width: 18px; height: 18px;"></i>
+                            </div>
+                            <div class="action-content">
+                                <div class="action-text">${action.action}</div>
+                                ${action.context ? `<div class="action-context small text-muted">${action.context}</div>` : ''}
+                            </div>
+                        </div>
+                    </li>
+                `;
+            });
+            htmlContent += `</ul>`;
+        }
+    } else {
+        htmlContent += `<p class="text-muted">No patient actions were identified.</p>`;
+    }
+    
+    htmlContent += `
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header bg-light py-2">
+                        <h6 class="mb-0"><i data-feather="briefcase" class="me-2 text-primary"></i> Doctor Actions</h6>
+                    </div>
+                    <div class="card-body doctor-actions">
+    `;
+    
+    // Add doctor actions, grouped by priority
+    if (actions.doctor_actions && actions.doctor_actions.length > 0) {
+        // Group actions by priority
+        const highPriority = actions.doctor_actions.filter(a => a.priority === 'high');
+        const mediumPriority = actions.doctor_actions.filter(a => a.priority === 'medium');
+        const lowPriority = actions.doctor_actions.filter(a => a.priority === 'low');
+        
+        // Add high priority actions
+        if (highPriority.length > 0) {
+            htmlContent += `<h6 class="mb-2 text-danger">High Priority</h6><ul class="action-list high-priority mb-3">`;
+            highPriority.forEach(action => {
+                htmlContent += `
+                    <li>
+                        <div class="d-flex align-items-start mb-2">
+                            <div class="action-icon me-2 text-danger">
+                                <i data-feather="alert-circle" style="width: 18px; height: 18px;"></i>
+                            </div>
+                            <div class="action-content">
+                                <div class="action-text">${action.action}</div>
+                                ${action.context ? `<div class="action-context small text-muted">${action.context}</div>` : ''}
+                            </div>
+                        </div>
+                    </li>
+                `;
+            });
+            htmlContent += `</ul>`;
+        }
+        
+        // Add medium priority actions
+        if (mediumPriority.length > 0) {
+            htmlContent += `<h6 class="mb-2 text-warning">Regular Priority</h6><ul class="action-list medium-priority mb-3">`;
+            mediumPriority.forEach(action => {
+                htmlContent += `
+                    <li>
+                        <div class="d-flex align-items-start mb-2">
+                            <div class="action-icon me-2 text-warning">
+                                <i data-feather="check-circle" style="width: 18px; height: 18px;"></i>
+                            </div>
+                            <div class="action-content">
+                                <div class="action-text">${action.action}</div>
+                                ${action.context ? `<div class="action-context small text-muted">${action.context}</div>` : ''}
+                            </div>
+                        </div>
+                    </li>
+                `;
+            });
+            htmlContent += `</ul>`;
+        }
+        
+        // Add low priority actions
+        if (lowPriority.length > 0) {
+            htmlContent += `<h6 class="mb-2 text-info">For Consideration</h6><ul class="action-list low-priority mb-3">`;
+            lowPriority.forEach(action => {
+                htmlContent += `
+                    <li>
+                        <div class="d-flex align-items-start mb-2">
+                            <div class="action-icon me-2 text-info">
+                                <i data-feather="info" style="width: 18px; height: 18px;"></i>
+                            </div>
+                            <div class="action-content">
+                                <div class="action-text">${action.action}</div>
+                                ${action.context ? `<div class="action-context small text-muted">${action.context}</div>` : ''}
+                            </div>
+                        </div>
+                    </li>
+                `;
+            });
+            htmlContent += `</ul>`;
+        }
+    } else {
+        htmlContent += `<p class="text-muted">No doctor actions were identified.</p>`;
+    }
+    
+    htmlContent += `
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert alert-info mt-2 mb-0">
+            <small>
+                <strong>Note:</strong> These action items were automatically generated based on the conversation. 
+                Always verify with healthcare professionals before taking action.
+            </small>
+        </div>
+    `;
+    
+    // Update the content
+    contentElement.innerHTML = htmlContent;
+    contentElement.style.display = 'block';
+    
+    // Make sure the results container is visible
+    resultsContainer.style.display = 'block';
+    
+    // Refresh Feather icons
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+    
+    // Add event listener to download button
+    const downloadBtn = document.getElementById(`download-actions-btn-${noteId}`);
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', function() {
+            const clickedNoteId = this.getAttribute('data-note-id');
+            downloadActionItems(actions, clickedNoteId);
+        });
+    } else {
+        console.error(`Download button for note ID ${noteId} not found after adding to DOM`);
+    }
+    
+    // Add CSS for the action items
+    // Use a unique ID for the style element to avoid duplicates
+    const styleId = `action-styles-${noteId}`;
+    if (!document.getElementById(styleId)) {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+            .action-list {
+                list-style-type: none;
+                padding-left: 0;
+            }
+            
+            .action-icon {
+                flex-shrink: 0;
+                margin-top: 2px;
+            }
+            
+            .action-content {
+                flex-grow: 1;
+            }
+            
+            .action-text {
+                margin-bottom: 2px;
+            }
+            
+            .action-context {
+                font-size: 0.85rem;
+                color: #6c757d;
+            }
+            
+            .high-priority .action-text {
+                font-weight: 500;
+            }
+            
+            .card-header h6 {
+                display: flex;
+                align-items: center;
+            }
+            
+            .download-actions-btn {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+function downloadActionItems(actions, noteId) {
+    // Format the follow-up date
+    let followUpDateFormatted = 'Not specified';
+    if (actions.follow_up_date) {
+        const followUpDate = new Date(actions.follow_up_date);
+        followUpDateFormatted = followUpDate.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+    
+    // Create content for the PDF/HTML
+    let content = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Follow-up Action Items - Note ID: ${noteId}</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; color: #333; }
+            h1 { color: #4361ee; font-size: 24px; margin-bottom: 10px; }
+            h2 { color: #4361ee; font-size: 18px; margin-top: 20px; margin-bottom: 10px; }
+            h3 { font-size: 16px; margin-top: 15px; margin-bottom: 5px; }
+            .date-info { margin-bottom: 20px; }
+            .urgency { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 14px; margin-left: 10px; }
+            .urgent { background-color: #f8d7da; color: #721c24; }
+            .soon { background-color: #fff3cd; color: #856404; }
+            .routine { background-color: #d1ecf1; color: #0c5460; }
+            .action-list { padding-left: 0; list-style-type: none; }
+            .action-item { margin-bottom: 10px; padding-left: 20px; position: relative; }
+            .action-item:before { content: "•"; position: absolute; left: 0; color: #4361ee; }
+            .action-context { font-size: 14px; color: #6c757d; margin-top: 2px; }
+            .high-priority { border-left: 3px solid #dc3545; padding-left: 10px; }
+            .medium-priority { border-left: 3px solid #ffc107; padding-left: 10px; }
+            .low-priority { border-left: 3px solid #17a2b8; padding-left: 10px; }
+            .disclaimer { font-size: 12px; margin-top: 30px; background-color: #f8f9fa; padding: 10px; border-radius: 4px; }
+            @media print {
+                body { font-size: 12pt; }
+                h1 { font-size: 18pt; }
+                h2 { font-size: 16pt; }
+                h3 { font-size: 14pt; }
+                .disclaimer { page-break-inside: avoid; }
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Follow-up Action Items</h1>
+        <div class="date-info">
+            <strong>Follow-up Date:</strong> ${followUpDateFormatted}
+            <span class="urgency ${actions.urgency_level}">${actions.urgency_level.charAt(0).toUpperCase() + actions.urgency_level.slice(1)}</span>
+        </div>
+        
+        <h2>Patient Actions</h2>
+    `;
+    
+    // Add patient actions
+    if (actions.patient_actions && actions.patient_actions.length > 0) {
+        // Group actions by priority
+        const highPriority = actions.patient_actions.filter(a => a.priority === 'high');
+        const mediumPriority = actions.patient_actions.filter(a => a.priority === 'medium');
+        const lowPriority = actions.patient_actions.filter(a => a.priority === 'low');
+        
+        // Add high priority actions
+        if (highPriority.length > 0) {
+            content += `<h3>High Priority</h3><ul class="action-list">`;
+            highPriority.forEach(action => {
+                content += `
+                    <li class="action-item high-priority">
+                        <div class="action-text">${action.action}</div>
+                        ${action.context ? `<div class="action-context">${action.context}</div>` : ''}
+                    </li>
+                `;
+            });
+            content += `</ul>`;
+        }
+        
+        // Add medium priority actions
+        if (mediumPriority.length > 0) {
+            content += `<h3>Regular Priority</h3><ul class="action-list">`;
+            mediumPriority.forEach(action => {
+                content += `
+                    <li class="action-item medium-priority">
+                        <div class="action-text">${action.action}</div>
+                        ${action.context ? `<div class="action-context">${action.context}</div>` : ''}
+                    </li>
+                `;
+            });
+            content += `</ul>`;
+        }
+        
+        // Add low priority actions
+        if (lowPriority.length > 0) {
+            content += `<h3>For Consideration</h3><ul class="action-list">`;
+            lowPriority.forEach(action => {
+                content += `
+                    <li class="action-item low-priority">
+                        <div class="action-text">${action.action}</div>
+                        ${action.context ? `<div class="action-context">${action.context}</div>` : ''}
+                    </li>
+                `;
+            });
+            content += `</ul>`;
+        }
+    } else {
+        content += `<p>No patient actions were identified.</p>`;
+    }
+    
+    content += `<h2>Doctor Actions</h2>`;
+    
+    // Add doctor actions
+    if (actions.doctor_actions && actions.doctor_actions.length > 0) {
+        // Group actions by priority
+        const highPriority = actions.doctor_actions.filter(a => a.priority === 'high');
+        const mediumPriority = actions.doctor_actions.filter(a => a.priority === 'medium');
+        const lowPriority = actions.doctor_actions.filter(a => a.priority === 'low');
+        
+        // Add high priority actions
+        if (highPriority.length > 0) {
+            content += `<h3>High Priority</h3><ul class="action-list">`;
+            highPriority.forEach(action => {
+                content += `
+                    <li class="action-item high-priority">
+                        <div class="action-text">${action.action}</div>
+                        ${action.context ? `<div class="action-context">${action.context}</div>` : ''}
+                    </li>
+                `;
+            });
+            content += `</ul>`;
+        }
+        
+        // Add medium priority actions
+        if (mediumPriority.length > 0) {
+            content += `<h3>Regular Priority</h3><ul class="action-list">`;
+            mediumPriority.forEach(action => {
+                content += `
+                    <li class="action-item medium-priority">
+                        <div class="action-text">${action.action}</div>
+                        ${action.context ? `<div class="action-context">${action.context}</div>` : ''}
+                    </li>
+                `;
+            });
+            content += `</ul>`;
+        }
+        
+        // Add low priority actions
+        if (lowPriority.length > 0) {
+            content += `<h3>For Consideration</h3><ul class="action-list">`;
+            lowPriority.forEach(action => {
+                content += `
+                    <li class="action-item low-priority">
+                        <div class="action-text">${action.action}</div>
+                        ${action.context ? `<div class="action-context">${action.context}</div>` : ''}
+                    </li>
+                `;
+            });
+            content += `</ul>`;
+        }
+    } else {
+        content += `<p>No doctor actions were identified.</p>`;
+    }
+    
+    content += `
+        <div class="disclaimer">
+            <strong>Note:</strong> These action items were automatically generated based on the conversation. 
+            Always verify with healthcare professionals before taking action.
+            <br>
+            <strong>Generated on:</strong> ${new Date().toLocaleString()}
+            <br>
+            <strong>Note ID:</strong> ${noteId}
+        </div>
+    </body>
+    </html>
+    `;
+    
+    // Create a Blob with the content
+    const blob = new Blob([content], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    
+    // Create a download link
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Follow-up_Actions_${noteId}_${actions.follow_up_date || new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Clean up
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 100);
+}
+// Add this function to notes.js after your existing functions
+
+/**
+* Shows a modal with the detailed patient history that was imported
+* 
+* @param {Object} history - The patient's medical history
+*/
+
+/**
+* Updates the saveNote function to incorporate previous patient history
+* This is a modification of the existing saveNote function
+*/
+
+function addTreatmentEfficacyAnalysis(patientName) {
+    // Skip if no patient name
+    if (!patientName) {
+        console.warn("Cannot analyze treatment efficacy: No patient name provided");
+        return;
+    }
+    
+    console.log("Setting up treatment efficacy analysis for:", patientName);
+    
+    // Create and add analysis tab 
+    const modalBody = document.querySelector('.modal-body');
+    if (!modalBody) {
+        console.error("Modal body not found");
+        return;
+    }
+    
+    // Check if analysis section already exists
+    if (document.getElementById('efficacy-analysis-section')) {
+        console.log("Analysis section already exists");
+        return;
+    }
+    
+    // Create analysis section
+    const analysisSection = document.createElement('div');
+    analysisSection.id = 'efficacy-analysis-section';
+    analysisSection.className = 'mt-4 pt-4 border-top';
+    analysisSection.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5><i data-feather="activity" class="me-2 text-primary"></i> Treatment Efficacy Analysis</h5>
+            <button id="run-analysis-btn" class="btn btn-sm btn-primary">
+                <i data-feather="bar-chart-2" class="btn-icon-sm"></i> Analyze Treatments
+            </button>
+        </div>
+        <div id="analysis-results" class="mt-3" style="display: none;">
+            <div class="analysis-loading text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Analyzing...</span>
+                </div>
+                <p class="mt-2">Analyzing treatment efficacy across visits...</p>
+            </div>
+            <div class="analysis-content" style="display: none;"></div>
+        </div>
+    `;
+    
+    modalBody.appendChild(analysisSection);
+    
+    // Initialize Feather icons
+    feather.replace();
+    
+    // Add event listener to run button
+    document.getElementById('run-analysis-btn').addEventListener('click', function() {
+        const resultsContainer = document.getElementById('analysis-results');
+        const loadingElement = resultsContainer.querySelector('.analysis-loading');
+        const contentElement = resultsContainer.querySelector('.analysis-content');
+        
+        console.log("Running analysis for patient:", patientName);
+        
+        // Show loading with patient name
+        resultsContainer.style.display = 'block';
+        loadingElement.innerHTML = `
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Analyzing...</span>
+            </div>
+            <p class="mt-2">Analyzing treatment efficacy for ${patientName}...</p>
+            <p class="small text-muted">Looking for multiple visits with symptom and medication data</p>
+        `;
+        loadingElement.style.display = 'block';
+        contentElement.style.display = 'none';
+        contentElement.innerHTML = ''; // Clear any previous content
+        
+        // Run the analysis
+        fetch('/analyze_treatment_efficacy', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ patient_name: patientName })
+        })
+        .then(response => {
+            console.log("Server responded with status:", response.status);
+            
+            // Check if the response is an error
+            if (!response.ok) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.message || `Server error: ${response.status}`);
+                }).catch(() => {
+                    // If error response can't be parsed as JSON
+                    throw new Error(`Server error: ${response.status}. Check server logs for details.`);
+                });
+            }
+            
+            return response.json();
+        })
+        .then(data => {
+            console.log("Analysis results:", data);
+            
+            // Hide loading
+            loadingElement.style.display = 'none';
+            
+            if (data.status === 'error') {
+                contentElement.innerHTML = `
+                    <div class="alert alert-warning">
+                        ${data.message || 'No treatment data found for this patient across multiple visits.'}
+                    </div>
+                `;
+                contentElement.style.display = 'block';
+                return;
+            }
+            
+            const analysis = data.analysis;
+            
+            // Format and display the results
+            let htmlContent = `
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3">Treatment Effectiveness Summary</h6>
+            `;
+            
+            // Check if we have any treatment effectiveness data
+            if (Object.keys(analysis.treatment_effectiveness).length === 0) {
+                htmlContent += `
+                    <div class="alert alert-info">
+                        Not enough data to analyze treatment effectiveness yet. 
+                        At least two visits with symptom severity changes are required.
+                    </div>
+                `;
+            } else {
+                // Add treatment effectiveness table
+                htmlContent += `
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Treatment</th>
+                                    <th>Effectiveness</th>
+                                    <th>Dosage</th>
+                                    <th>Improved Symptoms</th>
+                                    <th>Worsened Symptoms</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                for (const [treatment, data] of Object.entries(analysis.treatment_effectiveness)) {
+                    // Calculate effectiveness class
+                    let effectivenessClass = 'bg-warning text-dark';
+                    if (data.effectiveness_score >= 70) {
+                        effectivenessClass = 'bg-success text-white';
+                    } else if (data.effectiveness_score <= 30) {
+                        effectivenessClass = 'bg-danger text-white';
+                    }
+                    
+                    htmlContent += `
+                        <tr>
+                            <td><strong>${treatment}</strong></td>
+                            <td>
+                                <span class="badge ${effectivenessClass} px-2 py-1">
+                                    ${Math.round(data.effectiveness_score)}%
+                                </span>
+                            </td>
+                            <td>${data.latest_dosage || 'Not specified'}</td>
+                            <td>${data.symptoms_improved.join(', ') || '-'}</td>
+                            <td>${data.symptoms_worsened.join(', ') || '-'}</td>
+                        </tr>
+                    `;
+                }
+                
+                htmlContent += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+                // If we have detailed analysis data, show it
+                if (analysis.detailed_analysis && analysis.detailed_analysis.length > 0) {
+                    htmlContent += `
+                        <h6 class="mt-4 mb-3">Treatment Response Timeline</h6>
+                        <div class="timeline-container">
+                    `;
+                    
+                    // Sort by date
+                    const sortedAnalysis = [...analysis.detailed_analysis].sort((a, b) => 
+                        new Date(a.to_date) - new Date(b.to_date)
+                    );
+                    
+                    for (const entry of sortedAnalysis) {
+                        const dateFormatted = new Date(entry.to_date).toLocaleDateString();
+                        
+                        // Determine if this is a positive or negative correlation
+                        const entryClass = entry.correlation === 'positive' ? 'positive' : 'negative';
+                        const iconName = entry.correlation === 'positive' ? 'trending-up' : 'trending-down';
+                        
+                        htmlContent += `
+                            <div class="timeline-item ${entryClass}">
+                                <div class="timeline-icon">
+                                    <i data-feather="${iconName}"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6 class="timeline-date">${dateFormatted}</h6>
+                                    <p>
+                                        <strong>${entry.symptom}</strong> ${entry.change} after starting:
+                                        <span class="treatments-list">${entry.treatments.map(t => t.treatment).join(', ')}</span>
+                                    </p>
+                                    <p class="evidence small text-muted">"${entry.evidence}"</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    htmlContent += `</div>`;
+                }
+                
+                // Check if we have dosage changes to display
+                let hasDosageChanges = false;
+                for (const [treatment, data] of Object.entries(analysis.treatment_effectiveness)) {
+                    if (data.dosage_changes && data.dosage_changes.length > 0) {
+                        hasDosageChanges = true;
+                        break;
+                    }
+                }
+                
+                if (hasDosageChanges) {
+                    htmlContent += `
+                        <h6 class="mt-4 mb-3">Dosage Adjustments</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Medication</th>
+                                        <th>Date</th>
+                                        <th>From</th>
+                                        <th>To</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    for (const [treatment, data] of Object.entries(analysis.treatment_effectiveness)) {
+                        if (data.dosage_changes && data.dosage_changes.length > 0) {
+                            for (const change of data.dosage_changes) {
+                                const dateFormatted = new Date(change.date).toLocaleDateString();
+                                
+                                htmlContent += `
+                                    <tr>
+                                        <td>${treatment}</td>
+                                        <td>${dateFormatted}</td>
+                                        <td>${change.from}</td>
+                                        <td>${change.to}</td>
+                                    </tr>
+                                `;
+                            }
+                        }
+                    }
+                    
+                    htmlContent += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+            }
+            
+            htmlContent += `
+                        <div class="text-muted small mt-3">
+                            Analysis based on ${Object.keys(analysis.treatment_effectiveness).length} treatments across multiple visits
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add disclaimer
+            htmlContent += `
+                <div class="alert alert-warning mt-3">
+                    <small>
+                        <strong>Note:</strong> This analysis is based on correlations between treatments and symptom changes
+                        extracted from conversation notes. It does not necessarily indicate causation. Always consult with a 
+                        healthcare provider before making treatment decisions.
+                    </small>
+                </div>
+            `;
+            
+            // Update the content
+            contentElement.innerHTML = htmlContent;
+            contentElement.style.display = 'block';
+            
+            // Refresh Feather icons
+            feather.replace();
+            
+            // Add CSS for the timeline
+            const style = document.createElement('style');
+            style.textContent = `
+                .timeline-container {
+                    position: relative;
+                    max-height: 300px;
+                    overflow-y: auto;
+                    padding: 0 10px;
+                }
+                
+                .timeline-container:before {
+                    content: '';
+                    position: absolute;
+                    height: 100%;
+                    width: 2px;
+                    background: #e9ecef;
+                    left: 32px;
+                    top: 0;
+                }
+                
+                .timeline-item {
+                    position: relative;
+                    margin-bottom: 20px;
+                    margin-left: 20px;
+                }
+                
+                .timeline-icon {
+                    position: absolute;
+                    left: -20px;
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    text-align: center;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 1;
+                }
+                
+                .timeline-item.positive .timeline-icon {
+                    background: #e6f7e9;
+                    color: #28c76f;
+                }
+                
+                .timeline-item.negative .timeline-icon {
+                    background: #ffe6e6;
+                    color: #ea5455;
+                }
+                
+                .timeline-content {
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin-left: 30px;
+                }
+                
+                .timeline-date {
+                    color: #6c757d;
+                    font-size: 0.9rem;
+                    margin-bottom: 5px;
+                }
+                
+                .treatments-list {
+                    font-weight: 500;
+                }
+                
+                .evidence {
+                    font-style: italic;
+                    margin-top: 5px;
+                    color: #6c757d;
+                }
+            `;
+            document.head.appendChild(style);
+        })
+        .catch(error => {
+            console.error('Error analyzing treatment efficacy:', error);
+            loadingElement.style.display = 'none';
+            contentElement.innerHTML = `
+                <div class="alert alert-danger">
+                    <p>An error occurred while analyzing treatment efficacy:</p>
+                    <p>${error.message}</p>
+                    <hr>
+                    <div class="mt-2">
+                        <strong>Troubleshooting:</strong>
+                        <ul>
+                            <li>Check that the database is properly set up</li>
+                            <li>Ensure you have at least two notes for this patient</li>
+                            <li>Verify that notes contain symptom and medication data</li>
+                            <li>Check the server logs for more detailed error information</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            contentElement.style.display = 'block';
+        });
+    });
+}
+
+function generateTreatmentEffectivenessTable() {
+    // Sample data with varied effectiveness scores
+    const treatments = [
+      {
+        name: "atorvastatin",
+        effectiveness: 85,
+        dosage: "40mg daily",
+        improved: ["cholesterol levels", "triglycerides"],
+        worsened: ["muscle pain"]
+      },
+      {
+        name: "metoprolol",
+        effectiveness: 70,
+        dosage: "25mg twice daily",
+        improved: ["heart rate", "blood pressure"],
+        worsened: ["fatigue"]
+      },
+      {
+        name: "nitroglycerin",
+        effectiveness: 95,
+        dosage: "0.4mg as needed",
+        improved: ["chest pain", "angina"],
+        worsened: []
+      },
+      {
+        name: "lisinopril",
+        effectiveness: 40,
+        dosage: "10mg daily",
+        improved: ["blood pressure"],
+        worsened: ["persistent cough", "dizziness"]
+      },
+      {
+        name: "aspirin",
+        effectiveness: 60,
+        dosage: "81mg daily",
+        improved: ["inflammation"],
+        worsened: ["stomach discomfort"]
+      }
+    ];
+  
+    // Generate table HTML
+    let tableHTML = `
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Treatment</th>
+            <th>Effectiveness</th>
+            <th>Dosage</th>
+            <th>Improved Symptoms</th>
+            <th>Worsened Symptoms</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+  
+    treatments.forEach(treatment => {
+      // Calculate effectiveness class based on score
+      let effectivenessClass = 'bg-warning text-dark';
+      if (treatment.effectiveness >= 70) {
+        effectivenessClass = 'bg-success text-white';
+      } else if (treatment.effectiveness <= 40) {
+        effectivenessClass = 'bg-danger text-white';
+      }
+      
+      // Add row for this treatment
+      tableHTML += `
+        <tr>
+          <td><strong>${treatment.name}</strong></td>
+          <td>
+            <span class="badge ${effectivenessClass} px-2 py-1">
+              ${treatment.effectiveness}%
+            </span>
+          </td>
+          <td>${treatment.dosage}</td>
+          <td>${treatment.improved.join(', ') || '-'}</td>
+          <td>${treatment.worsened.join(', ') || '-'}</td>
+        </tr>
+      `;
+    });
+  
+    tableHTML += `
+        </tbody>
+      </table>
+    `;
+  
+    return tableHTML;
+  }
+  
+  // This function would replace the table generation in the addTreatmentEfficacyAnalysis function
+  // Specifically around line 86-117 in the original code
+
+function extractPatientDetailsFromText(text) {
+    console.log("=== EXTRACT PATIENT DETAILS ===");
+    if (!text) {
+        console.log("No text provided for extraction");
+        return null;
+    }
+    
+    console.log("Analyzing text (first 100 chars):", text.substring(0, 100) + "...");
+
+    if (!text) return null;
+    
+    // Look for name patterns
+    const namePatterns = [
+        /patient(?:'s)? name(?:\s+is)?(?:\s*:)?\s+([A-Z][a-z]+(?: [A-Z][a-z]+)+)/i,
+        /(?:Mr\.|Mrs\.|Miss|Ms\.|Dr\.)\s+([A-Z][a-z]+(?: [A-Z][a-z]+)+)/i,
+        /name(?:\s*:)?\s+([A-Z][a-z]+(?: [A-Z][a-z]+)+)/i
+    ];
+    
+    // Look for age patterns
+    const agePatterns = [
+        /(?:patient(?:'s)? )?age(?:\s+is)?(?:\s*:)?\s+(\d{1,3})(?: years? old)?/i,
+        /(\d{1,3})(?:\s*|-)?years?(?:\s*|-)?old/i,
+        /age(?:\s*:)?\s+(\d{1,3})/i
+    ];
+    
+    let patientName = null;
+    let patientAge = null;
+    
+    // Try to extract name
+    for (const pattern of namePatterns) {
+        const match = text.match(pattern);
+        if (match && match[1]) {
+            patientName = match[1].trim();
+            break;
+        }
+    }
+    
+    // Try to extract age
+    for (const pattern of agePatterns) {
+        const match = text.match(pattern);
+        if (match && match[1]) {
+            patientAge = parseInt(match[1]);
+            break;
+        }
+    }
+    
+    if (patientName || patientAge) {
+        console.log(`Extracted patient details - Name: ${patientName}, Age: ${patientAge}`);
+        return { name: patientName, age: patientAge };
+    }
+    
+    console.log("Could not extract patient details from text");
+    return null;
+}
+
+function retrievePreviousPatientHistory(patientName, patientAge) {
+    console.log("=== RETRIEVE PREVIOUS HISTORY ===");
+    // Skip if no patient name or age provided
+    if (!patientName || !patientAge) {
+        console.warn("Cannot retrieve previous history: Missing patient name or age");
+        return Promise.resolve(null);
+    }
+    
+    console.log(`Attempting to retrieve history for patient: ${patientName}, age: ${patientAge}`);
+    
+    // Create a loading indicator that will be shown during the fetch
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.id = 'history-loading-indicator';
+    loadingIndicator.className = 'loading-indicator mt-2 p-2 bg-light rounded text-center';
+    loadingIndicator.innerHTML = `
+        <div class="spinner-border spinner-border-sm text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <span class="ms-2 small text-muted">Checking for previous patient history...</span>
+    `;
+    
+    // Show it near the transcript div
+    const transcriptContainer = document.getElementById('transcript').parentNode;
+    if (transcriptContainer && !document.getElementById('history-loading-indicator')) {
+        transcriptContainer.appendChild(loadingIndicator);
+    }
+    
+    console.log("Making fetch request to /find_previous_patient_history");
+    console.log("Request payload:", { patient_name: patientName, patient_age: patientAge });
+    
+    // Define a custom endpoint to find previous patient history
+    return fetch('/find_previous_patient_history', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ 
+            patient_name: patientName,
+            patient_age: patientAge
+        })
+    })
+    .then(response => {
+        // Remove the loading indicator
+        if (document.getElementById('history-loading-indicator')) {
+            document.getElementById('history-loading-indicator').remove();
+        }
+        
+        console.log("Server response status:", response.status);
+        
+        if (!response.ok) {
+            console.log(`Server returned ${response.status} when retrieving patient history`);
+            return null;
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("Server response data:", data);
+        
+        if (data && data.status === 'success' && data.history) {
+            console.log("=== FOUND PREVIOUS HISTORY ===");
+            console.log("History data:", data.history);
+            
+            // Log what fields were found to help with debugging
+            console.log("Fields in retrieved history:", Object.keys(data.history));
+            
+            // Check for empty arrays
+            let foundEmptyFields = [];
+            let foundPopulatedFields = [];
+            
+            // Check all fields for empty arrays
+            for (const field of ["allergies", "past_history", "chronic_diseases", "family_history", "lifestyle"]) {
+                if (Array.isArray(data.history[field])) {
+                    if (data.history[field].length === 0) {
+                        console.warn(`${field} is an empty array`);
+                        foundEmptyFields.push(field);
+                    } else {
+                        console.log(`${field} has ${data.history[field].length} items:`, data.history[field]);
+                        foundPopulatedFields.push(field);
+                    }
+                } else if (data.history[field] === undefined) {
+                    console.warn(`${field} is undefined`);
+                    foundEmptyFields.push(field);
+                } else {
+                    console.log(`${field} is not an array:`, data.history[field]);
+                }
+            }
+            
+            if (foundEmptyFields.length > 0) {
+                console.warn(`WARNING: Found ${foundEmptyFields.length} empty fields:`, foundEmptyFields.join(', '));
+            }
+            
+            if (foundPopulatedFields.length === 0) {
+                console.warn("WARNING: No populated fields found in history data!");
+            }
+            
+            // Create a notification to inform the user
+            showToast(`Found previous medical history for ${patientName}. Personal details have been pre-filled.`, 'info');
+            
+            // Create a UI element to show which details were imported
+            const historyNotification = document.createElement('div');
+            historyNotification.className = 'history-notification alert alert-info mt-3';
+            historyNotification.innerHTML = `
+                <div class="d-flex align-items-start">
+                    <div class="me-3">
+                        <i data-feather="clipboard" style="width: 24px; height: 24px;"></i>
+                    </div>
+                    <div>
+                        <h6 class="alert-heading mb-1">Previous Medical History Found</h6>
+                        <p class="mb-1">The following information was imported from the patient's last visit:</p>
+                        <ul class="mb-0 small">
+                            ${data.history.allergies && data.history.allergies.length > 0 ? `<li>Allergies (${data.history.allergies.length})</li>` : ''}
+                            ${data.history.past_history && data.history.past_history.length > 0 ? `<li>Past Medical History (${data.history.past_history.length})</li>` : ''}
+                            ${data.history.chronic_diseases && data.history.chronic_diseases.length > 0 ? `<li>Chronic Diseases (${data.history.chronic_diseases.length})</li>` : ''}
+                            ${data.history.family_history && data.history.family_history.length > 0 ? `<li>Family History (${data.history.family_history.length})</li>` : ''}
+                            ${data.history.lifestyle && data.history.lifestyle.length > 0 ? `<li>Lifestyle Factors (${data.history.lifestyle.length})</li>` : ''}
+                        </ul>
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-outline-primary view-history-btn">View Details</button>
+                            <button class="btn btn-sm btn-outline-danger ms-2 clear-history-btn">Clear Imported Data</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add the notification to the page
+            const transcriptContainer = document.getElementById('transcript').parentNode;
+            if (transcriptContainer) {
+                if (document.querySelector('.history-notification')) {
+                    document.querySelector('.history-notification').remove();
+                }
+                transcriptContainer.appendChild(historyNotification);
+                
+                // Initialize feather icons
+                feather.replace();
+                
+                // Add event listeners to the buttons
+                historyNotification.querySelector('.view-history-btn').addEventListener('click', () => {
+                    showPatientHistoryDetails(data.history);
+                });
+                
+                historyNotification.querySelector('.clear-history-btn').addEventListener('click', () => {
+                    // Clear the imported history
+                    if (window.importedPatientHistory) {
+                        window.importedPatientHistory = null;
+                        historyNotification.remove();
+                        showToast('Imported patient history cleared', 'info');
+                    }
+                });
+            }
+            
+            // Store the history data for later use
+            window.importedPatientHistory = data.history;
+            console.log("Set window.importedPatientHistory to:", window.importedPatientHistory);
+            
+            return data.history;
+        } else {
+            console.log("=== NO PREVIOUS HISTORY FOUND ===");
+            if (data) {
+                console.log("Response status:", data.status);
+                console.log("Response message:", data.message);
+            }
+            return null;
+        }
+    })
+    .catch(error => {
+        // Remove the loading indicator
+        if (document.getElementById('history-loading-indicator')) {
+            document.getElementById('history-loading-indicator').remove();
+        }
+        
+        console.error('Error retrieving patient history:', error);
+        return null;
+    });
+}
+
+ function showPatientHistoryDetails(history) {
+    // Create a modal to show the history details
+    const modalId = 'historyDetailsModal';
+    
+    // Remove existing modal if it exists
+    if (document.getElementById(modalId)) {
+        document.getElementById(modalId).remove();
+    }
+    
+    // Create the modal
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.id = modalId;
+    modal.setAttribute('tabindex', '-1');
+    modal.setAttribute('aria-labelledby', `${modalId}Label`);
+    modal.setAttribute('aria-hidden', 'true');
+    
+    let modalContent = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="${modalId}Label">
+                        <i data-feather="clipboard" class="me-2"></i>
+                        Imported Patient History
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+    `;
+    
+    // Add patient details section
+    if (history.patient_details) {
+        modalContent += `
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Patient Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled mb-0">
+                            <li><strong>Name:</strong> ${history.patient_details.name || 'Not specified'}</li>
+                            <li><strong>Age:</strong> ${history.patient_details.age || 'Not specified'}</li>
+                            <li><strong>Gender:</strong> ${history.patient_details.gender || 'Not specified'}</li>
+                            <li><strong>Marital Status:</strong> ${history.patient_details.marital_status || 'Not specified'}</li>
+                            <li><strong>Residence:</strong> ${history.patient_details.residence || 'Not specified'}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Add allergies section
+    if (history.allergies && history.allergies.length > 0) {
+        modalContent += `
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0 text-danger">Allergies</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            ${history.allergies.map(allergy => `<li>${allergy}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Add past medical history section
+    if (history.past_history && history.past_history.length > 0) {
+        modalContent += `
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Past Medical History</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            ${history.past_history.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Add chronic diseases section
+    if (history.chronic_diseases && history.chronic_diseases.length > 0) {
+        modalContent += `
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Chronic Diseases</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            ${history.chronic_diseases.map(disease => `<li>${disease}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Add family history section
+    if (history.family_history && history.family_history.length > 0) {
+        modalContent += `
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Family History</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            ${history.family_history.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Add lifestyle section
+    if (history.lifestyle && history.lifestyle.length > 0) {
+        modalContent += `
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Lifestyle Factors</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            ${history.lifestyle.map(item => `<li>${typeof item === 'string' ? item : JSON.stringify(item)}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Add previous medications section
+    if (history.drug_history && history.drug_history.length > 0) {
+        modalContent += `
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Previous Medications</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            ${history.drug_history.map(med => `<li>${med}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Close the row and add footer
+    modalContent += `
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="text-muted small me-auto">This data was imported from the patient's previous visit</div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.innerHTML = modalContent;
+    document.body.appendChild(modal);
+    
+    // Initialize and show the modal
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+    
+    // Initialize feather icons
+    feather.replace();
+ }
 // Add CSS for highlighting updated notes
 const style = document.createElement('style');
 style.textContent = `
