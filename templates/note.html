@@ -1198,51 +1198,43 @@
         </div>
     </div>
     
-    <!-- Note details modal -->
-    <div class="modal fade" id="noteDetailsModal" tabindex="-1" aria-labelledby="noteDetailsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="noteDetailsModalLabel">Note Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="original-note-container">
-                                <h5>Original Note</h5>
-                                <div class="original-note-content"></div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="summary-container">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h5>AI-Generated Summary</h5>
-                                    <div>
-                                        <button class="btn btn-sm btn-outline-primary edit-summary-btn">
-                                            <i data-feather="edit-2" class="btn-icon-sm"></i> Edit
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-success save-summary-btn" style="display: none;">
-                                            <i data-feather="check" class="btn-icon-sm"></i> Save
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-secondary download-summary-btn">
-                                            <i data-feather="download" class="btn-icon-sm"></i> Download
-                                        </button>
-                                    </div>
-                                </div>
-                                <div id="summary-editor" class="summary-content">
-                                    <!-- Summary content will be loaded here -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
+<!-- Note Details Modal -->
+<div class="modal fade" id="noteDetailsModal" tabindex="-1" aria-labelledby="noteDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="noteDetailsModalLabel">Note Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="original-note-section">
+          <h5>Original Note</h5>
+          <div class="original-note-content"></div>
         </div>
+        <div class="summary-section mt-4 pt-4 border-top">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5>Medical Summary</h5>
+            <div class="btn-group">
+              <button class="btn btn-sm btn-outline-primary edit-summary-btn">
+                <i data-feather="edit" class="btn-icon-sm"></i> Edit
+              </button>
+              <button class="btn btn-sm btn-success save-summary-btn" style="display: none;">
+                <i data-feather="save" class="btn-icon-sm"></i> Save
+              </button>
+              <button class="btn btn-sm btn-outline-primary download-summary-btn ms-2">
+                <i data-feather="download" class="btn-icon-sm"></i> Download
+              </button>
+            </div>
+          </div>
+          <div id="summary-editor" class="summary-content p-3 border rounded"></div>
+        </div>
+        <!-- The follow-up action section will be added here dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}
 
